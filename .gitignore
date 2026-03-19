@@ -55,6 +55,8 @@ application-secrets.properties
 # Spring Boot
 admin-backend/src/main/resources/application-local.yml
 admin-backend/src/main/resources/application-local.properties
+admin-backend/src/main/resources/application-dev.yml
+admin-backend/src/main/resources/application-test.yml
 
 # Logs
 logs/
