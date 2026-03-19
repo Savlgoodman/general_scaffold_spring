@@ -1,9 +1,14 @@
+import { BrowserRouter, Routes, Route } from "react-router-dom"
+import Hello from "@/pages/Hello"
+
 function App() {
   return (
-    <div>
-      <h1>Admin Platform</h1>
-      <p>Welcome to the admin platform.</p>
-    </div>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/hello" element={<Hello />} />
+        <Route path="/" element={<Hello />} />
+      </Routes>
+    </BrowserRouter>
   )
 }
 
