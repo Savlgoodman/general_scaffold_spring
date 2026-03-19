@@ -1,4 +1,5 @@
-import { Bell, Search } from "lucide-react"
+import { Bell, Search, Sun, Moon, Monitor, Coffee } from "lucide-react"
+import { useThemeStore } from "@/store/theme"
 import { Input } from "@/components/ui/input"
 import {
   Avatar,
@@ -18,6 +19,17 @@ import { SidebarTrigger } from "@/components/ui/sidebar"
 import { Separator } from "@/components/ui/separator"
 
 function Header() {
+  const { theme, setTheme } = useThemeStore()
+
+  const themeIcon = {
+    light: Sun,
+    dark: Moon,
+    warm: Coffee,
+    system: Monitor,
+  }[theme]
+
+  const ThemeIcon = themeIcon
+
   return (
     <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
       <SidebarTrigger />
@@ -33,12 +45,47 @@ function Header() {
         </div>
       </div>
       <div className="flex items-center gap-2">
+        {/* Theme Toggle */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon">
+              <ThemeIcon className="size-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={() => setTheme("light")} className="flex items-center gap-2">
+              <Sun className="size-4" />
+              浅色
+              {theme === "light" && <span className="ml-auto text-xs text-muted-foreground">✓</span>}
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setTheme("warm")} className="flex items-center gap-2">
+              <Coffee className="size-4" />
+              暖色
+              {theme === "warm" && <span className="ml-auto text-xs text-muted-foreground">✓</span>}
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setTheme("dark")} className="flex items-center gap-2">
+              <Moon className="size-4" />
+              深色
+              {theme === "dark" && <span className="ml-auto text-xs text-muted-foreground">✓</span>}
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => setTheme("system")} className="flex items-center gap-2">
+              <Monitor className="size-4" />
+              跟随系统
+              {theme === "system" && <span className="ml-auto text-xs text-muted-foreground">✓</span>}
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        {/* Notifications */}
         <Button variant="ghost" size="icon" className="relative">
           <Bell className="size-4" />
           <span className="absolute -top-1 -right-1 size-4 rounded-full bg-destructive text-[10px] text-destructive-foreground flex items-center justify-center">
             3
           </span>
         </Button>
+
+        {/* User Menu */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
