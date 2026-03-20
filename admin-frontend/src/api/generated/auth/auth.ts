@@ -7,53 +7,9 @@
  */
 import type {
   LoginDTO,
-  RefreshTokenDTO,
-  RegisterDTO
+  RefreshTokenDTO
 } from '../model';
 
-
-/**
- * 注册新用户，自动登录并返回Token
- * @summary 用户注册
- */
-export type registerResponse200 = {
-  data: Blob
-  status: 200
-}
-
-export type registerResponseSuccess = (registerResponse200) & {
-  headers: Headers;
-};
-;
-
-export type registerResponse = (registerResponseSuccess)
-
-export const getRegisterUrl = () => {
-
-
-  
-
-  return `/api/admin/auth/register`
-}
-
-export const register = async (registerDTO: RegisterDTO, options?: RequestInit): Promise<registerResponse> => {
-  
-  const res = await fetch(getRegisterUrl(),
-  {      
-    ...options,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      registerDTO,)
-  }
-)
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-  
-  const data: registerResponse['data'] = body ? JSON.parse(body) : {}
-  return { data, status: res.status, headers: res.headers } as registerResponse
-}
-  
 
 /**
  * 使用Refresh Token获取新的Access Token

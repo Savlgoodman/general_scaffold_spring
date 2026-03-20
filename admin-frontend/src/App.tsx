@@ -3,7 +3,11 @@ import MainLayout from "@/components/layout/MainLayout"
 import Dashboard from "@/pages/Dashboard"
 import Hello from "@/pages/Hello"
 import Login from "@/pages/Login"
+import UserManagement from "@/pages/system/UserManagement"
+import RoleManagement from "@/pages/system/RoleManagement"
+import PermissionManagement from "@/pages/system/PermissionManagement"
 import ProtectedRoute from "@/components/auth/ProtectedRoute"
+import { Toaster } from "@/components/ui/toaster"
 
 function App() {
   return (
@@ -14,10 +18,10 @@ function App() {
           <Route element={<MainLayout />}>
             <Route path="/" element={<Dashboard />} />
             <Route path="/hello" element={<Hello />} />
-            <Route path="/system/user" element={<Dashboard />} />
-            <Route path="/system/role" element={<Dashboard />} />
+            <Route path="/system/user" element={<UserManagement />} />
+            <Route path="/system/role" element={<RoleManagement />} />
             <Route path="/system/menu" element={<Dashboard />} />
-            <Route path="/system/permission" element={<Dashboard />} />
+            <Route path="/system/permission" element={<PermissionManagement />} />
             <Route path="/logs/api" element={<Dashboard />} />
             <Route path="/logs/login" element={<Dashboard />} />
             <Route path="/logs/operation" element={<Dashboard />} />
@@ -25,6 +29,7 @@ function App() {
           </Route>
         </Route>
       </Routes>
+      <Toaster />
     </BrowserRouter>
   )
 }

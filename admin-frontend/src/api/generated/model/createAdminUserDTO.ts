@@ -7,29 +7,23 @@
  */
 
 /**
- * 注册请求参数
+ * 创建用户DTO
  */
-export interface RegisterDTO {
-  /**
-   * 用户名
-   * @minLength 3
-   * @maxLength 50
-   */
+export interface CreateAdminUserDTO {
+  /** 用户名 */
   username: string;
-  /**
-   * 密码
-   * @minLength 6
-   * @maxLength 100
-   */
+  /** 密码 */
   password: string;
-  /**
-   * 昵称
-   * @minLength 0
-   * @maxLength 50
-   */
-  nickname: string;
+  /** 昵称 */
+  nickname?: string;
   /** 邮箱 */
   email?: string;
   /** 手机号 */
   phone?: string;
+  /** 头像URL */
+  avatar?: string;
+  /** 是否超级管理员（1-是 0-否） */
+  isSuperuser?: number;
+  /** 状态（1-正常 0-禁用） */
+  status?: number;
 }

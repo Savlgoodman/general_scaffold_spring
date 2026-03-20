@@ -35,4 +35,16 @@ public class AdminPermission extends BaseEntity {
 
     @Schema(description = "排序")
     private Integer sort;
+
+    @Schema(description = "分组标识，如: admin_users")
+    private String groupKey;
+
+    @Schema(description = "分组名称，如: 用户管理")
+    private String groupName;
+
+    @Schema(description = "是否组权限（1-是 0-否）")
+    private Integer isGroup;
+
+    @Schema(description = "状态（1-启用 0-禁用）")
+    private Integer status;
 }

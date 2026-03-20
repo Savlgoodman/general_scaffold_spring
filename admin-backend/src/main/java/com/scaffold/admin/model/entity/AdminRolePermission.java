@@ -17,4 +17,10 @@ public class AdminRolePermission extends BaseEntity {
 
     @Schema(description = "权限ID")
     private Long permissionId;
+
+    @Schema(description = "生效方式（GRANT-允许 DENY-拒绝）")
+    private String effect;
+
+    @Schema(description = "优先级（0-100，越大越优先）")
+    private Integer priority;
 }

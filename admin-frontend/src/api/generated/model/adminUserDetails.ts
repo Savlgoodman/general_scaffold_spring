@@ -15,6 +15,7 @@ export interface AdminUserDetails {
   username?: string;
   password?: string;
   nickname?: string;
+  isSuperuser?: number;
   authorities?: GrantedAuthority[];
   enabled?: boolean;
   accountNonExpired?: boolean;

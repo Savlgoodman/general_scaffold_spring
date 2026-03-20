@@ -32,4 +32,7 @@ public class AdminUser extends BaseEntity {
 
     @Schema(description = "状态（1-正常 0-禁用）")
     private Integer status;
+
+    @Schema(description = "是否超级管理员（1-是 0-否）")
+    private Integer isSuperuser;
 }

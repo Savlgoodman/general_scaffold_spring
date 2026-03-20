@@ -45,15 +45,15 @@ public class AuthController {
         return R.ok(loginVO);
     }
 
-    /**
-     * 用户注册
-     */
-    @PostMapping("/register")
-    @Operation(summary = "用户注册", description = "注册新用户，自动登录并返回Token")
-    public R<LoginVO> register(@RequestBody RegisterDTO registerDTO) {
-        LoginVO loginVO = authService.register(registerDTO);
-        return R.ok(loginVO);
-    }
+//    /**
+//     * 用户注册(关闭)
+//     */
+//    @PostMapping("/register")
+//    @Operation(summary = "用户注册", description = "注册新用户，自动登录并返回Token")
+//    public R<LoginVO> register(@RequestBody RegisterDTO registerDTO) {
+//        LoginVO loginVO = authService.register(registerDTO);
+//        return R.ok(loginVO);
+//    }
 
     /**
      * 刷新Token
