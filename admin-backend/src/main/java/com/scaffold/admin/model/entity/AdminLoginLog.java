@@ -15,7 +15,7 @@ public class AdminLoginLog extends BaseEntity {
     @Schema(description = "用户名")
     private String username;
 
-    @Schema(description = "登录状态（success-成功 failed-失败 locked-锁定）")
+    @Schema(description = "登录状态（success-成功 failed-失败 locked-锁定 disabled-禁用）")
     private String status;
 
     @Schema(description = "IP地址")

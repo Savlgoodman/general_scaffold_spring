@@ -23,10 +23,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.authentication.DisabledException;
-import org.springframework.security.authentication.LockedException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -34,6 +30,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -49,7 +46,6 @@ public class AuthServiceImpl implements AuthService {
 
     private final AdminUserMapper adminUserMapper;
     private final AdminLoginLogMapper loginLogMapper;
-    private final AuthenticationManager authenticationManager;
     private final JwtTokenProvider jwtTokenProvider;
     private final PasswordEncoder passwordEncoder;
     private final RedisTemplate<String, Object> redisTemplate;
@@ -83,15 +79,39 @@ public class AuthServiceImpl implements AuthService {
         }
 
         try {
-            // 验证用户名密码（Spring Security内部会调用UserDetails.isEnabled()检查用户状态）
-            Authentication authentication = authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(username, loginDTO.getPassword())
+            // 1. 先查询用户
+            AdminUser user = adminUserMapper.selectOne(
+                    new LambdaQueryWrapper<AdminUser>()
+                            .eq(AdminUser::getUsername, username)
+                            .eq(AdminUser::getIsDeleted, 0)
+            );
+
+            // 2. 检查用户是否存在
+            if (user == null) {
+                recordLoginLog(username, "failed", ip, userAgent, "用户不存在");
+                incrementLoginFailCount(username);
+                throw new BusinessException(ResultCode.UNAUTHORIZED, "用户名或密码错误");
+            }
+
+            // 3. 检查用户是否被禁用
+            if (user.getStatus() == null || user.getStatus() != 1) {
+                recordLoginLog(username, "disabled", ip, userAgent, "账户已被禁用");
+                throw new BusinessException(ResultCode.ACCOUNT_LOCKED, "账户已被禁用");
+            }
+
+            // 4. 验证密码
+            if (!passwordEncoder.matches(loginDTO.getPassword(), user.getPassword())) {
+                recordLoginLog(username, "failed", ip, userAgent, "密码错误");
+                incrementLoginFailCount(username);
+                throw new BusinessException(ResultCode.UNAUTHORIZED, "用户名或密码错误");
+            }
+
+            // 5. 创建认证信息
+            AdminUserServiceImpl.AdminUserDetails userDetails = new AdminUserServiceImpl.AdminUserDetails(user, Collections.emptyList());
+            Authentication authentication = new UsernamePasswordAuthenticationToken(
+                    userDetails, null, userDetails.getAuthorities()
             );
             SecurityContextHolder.getContext().setAuthentication(authentication);
-
-            // 获取认证用户信息
-            AdminUserServiceImpl.AdminUserDetails userDetails = (AdminUserServiceImpl.AdminUserDetails) authentication.getPrincipal();
-            AdminUser user = adminUserMapper.selectById(userDetails.getId());
 
             // 清除登录失败计数
             clearLoginFailCount(username);
@@ -108,16 +128,12 @@ public class AuthServiceImpl implements AuthService {
 
             // 构建响应
             return buildLoginVO(user, accessToken, refreshToken);
-        } catch (BadCredentialsException e) {
-            recordLoginLog(username, "failed", ip, userAgent, "密码错误");
-            incrementLoginFailCount(username);
-            throw new BusinessException(ResultCode.UNAUTHORIZED, "用户名或密码错误");
-        } catch (LockedException e) {
-            recordLoginLog(username, "locked", ip, userAgent, "账户已被锁定");
-            throw new BusinessException(ResultCode.ACCOUNT_LOCKED, "账户已被锁定");
-        } catch (DisabledException e) {
-            recordLoginLog(username, "disabled", ip, userAgent, "账户已被禁用");
-            throw new BusinessException(ResultCode.ACCOUNT_LOCKED, "账户已被禁用");
+        } catch (BusinessException e) {
+            throw e; // 已经是业务异常，直接抛出
+        } catch (Exception e) {
+            recordLoginLog(username, "failed", ip, userAgent, "系统异常");
+            log.error("登录异常", e);
+            throw new BusinessException(ResultCode.INTERNAL_SERVER_ERROR, "登录失败");
         }
     }
 
