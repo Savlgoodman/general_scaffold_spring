@@ -3,30 +3,28 @@ package com.scaffold.admin.util;
 import cn.hutool.core.util.StrUtil;
 import com.wf.captcha.SpecCaptcha;
 import com.wf.captcha.base.Captcha;
+import com.scaffold.admin.common.RedisKeys;
 import org.springframework.data.redis.core.RedisTemplate;
 
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 /**
- * 验证码工具类
+ * 验证码工具类（内部使用）
  */
 public class AuthCaptchaUtil {
 
-    private static final String CAPTCHA_KEY_PREFIX = "captcha:";
     private static final long CAPTCHA_EXPIRATION = 5; // 5分钟
+    private static final int DEFAULT_WIDTH = 130;
+    private static final int DEFAULT_HEIGHT = 48;
+    private static final int DEFAULT_LEN = 4;
 
     /**
-     * 生成验证码
-     * @param width 图片宽度
-     * @param height 图片高度
-     * @param len 验证码长度
-     * @param redisTemplate Redis模板
+     * 生成验证码（使用默认配置：PNG类型）
      * @return 验证码结果，包含key和Base64图片
      */
-    public static CaptchaResult generate(int width, int height, int len,
-                                         RedisTemplate<String, Object> redisTemplate) {
-        return generate(width, height, len, null, redisTemplate);
+    public static CaptchaResult generate(RedisTemplate<String, Object> redisTemplate) {
+        return generate(DEFAULT_WIDTH, DEFAULT_HEIGHT, DEFAULT_LEN, "png", redisTemplate);
     }
 
     /**
@@ -35,7 +33,6 @@ public class AuthCaptchaUtil {
      * @param height 图片高度
      * @param len 验证码长度
      * @param type 验证码类型：png/gif/arithmetic/chinese/chineseGif
-     * @param redisTemplate Redis模板
      * @return 验证码结果
      */
     public static CaptchaResult generate(int width, int height, int len, String type,
@@ -66,21 +63,22 @@ public class AuthCaptchaUtil {
         String captchaKey = UUID.randomUUID().toString().replace("-", "");
 
         // 存入Redis
-        String redisKey = CAPTCHA_KEY_PREFIX + captchaKey;
+        String redisKey = RedisKeys.CAPTCHA.key(captchaKey);
         redisTemplate.opsForValue().set(redisKey, code, CAPTCHA_EXPIRATION, TimeUnit.MINUTES);
 
-        return new CaptchaResult(captchaKey, base64Image, type);
+        return new CaptchaResult(captchaKey, base64Image, type != null ? type : "png");
     }
 
     /**
      * 验证验证码
+     * @return true-验证成功（已删除） false-验证失败或已过期
      */
     public static boolean verify(String captchaKey, String captchaCode,
                                 RedisTemplate<String, Object> redisTemplate) {
         if (StrUtil.isBlank(captchaKey) || StrUtil.isBlank(captchaCode)) {
             return false;
         }
-        String redisKey = CAPTCHA_KEY_PREFIX + captchaKey;
+        String redisKey = RedisKeys.CAPTCHA.key(captchaKey);
         Object cachedCode = redisTemplate.opsForValue().get(redisKey);
         if (cachedCode == null) {
             return false;
@@ -98,7 +96,7 @@ public class AuthCaptchaUtil {
      */
     public static void delete(String captchaKey, RedisTemplate<String, Object> redisTemplate) {
         if (StrUtil.isNotBlank(captchaKey)) {
-            String redisKey = CAPTCHA_KEY_PREFIX + captchaKey;
+            String redisKey = RedisKeys.CAPTCHA.key(captchaKey);
             redisTemplate.delete(redisKey);
         }
     }
@@ -107,9 +105,9 @@ public class AuthCaptchaUtil {
      * 验证码结果
      */
     public static class CaptchaResult {
-        private String captchaKey;
-        private String captchaImage;
-        private String type;
+        private final String captchaKey;
+        private final String captchaImage;
+        private final String type;
 
         public CaptchaResult(String captchaKey, String captchaImage, String type) {
             this.captchaKey = captchaKey;
@@ -121,24 +119,12 @@ public class AuthCaptchaUtil {
             return captchaKey;
         }
 
-        public void setCaptchaKey(String captchaKey) {
-            this.captchaKey = captchaKey;
-        }
-
         public String getCaptchaImage() {
             return captchaImage;
         }
 
-        public void setCaptchaImage(String captchaImage) {
-            this.captchaImage = captchaImage;
-        }
-
         public String getType() {
             return type;
-        }
-
-        public void setType(String type) {
-            this.type = type;
         }
     }
 }

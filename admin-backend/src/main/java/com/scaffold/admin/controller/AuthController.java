@@ -6,14 +6,13 @@ import com.scaffold.admin.model.dto.RefreshTokenDTO;
 import com.scaffold.admin.model.dto.RegisterDTO;
 import com.scaffold.admin.model.vo.CaptchaVO;
 import com.scaffold.admin.model.vo.LoginVO;
-import com.scaffold.admin.security.AdminUserDetails;
 import com.scaffold.admin.security.JwtTokenProvider;
+import com.scaffold.admin.service.AdminUserService;
 import com.scaffold.admin.service.AuthService;
-import com.scaffold.admin.util.AuthCaptchaUtil;
+import com.scaffold.admin.service.impl.AdminUserServiceImpl.AdminUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -28,25 +27,15 @@ public class AuthController {
 
     private final AuthService authService;
     private final JwtTokenProvider jwtTokenProvider;
-    private final RedisTemplate<String, Object> redisTemplate;
 
     /**
      * 获取图形验证码
-     * 生成验证码图片，返回Base64编码和key
      */
     @GetMapping("/captcha")
     @Operation(summary = "获取图形验证码", description = "生成并返回验证码图片Base64和key")
-    public R<CaptchaVO> getCaptcha(
-            @RequestParam(defaultValue = "130") int width,
-            @RequestParam(defaultValue = "48") int height,
-            @RequestParam(defaultValue = "4") int len,
-            @RequestParam(required = false) String type) {
-        AuthCaptchaUtil.CaptchaResult result = AuthCaptchaUtil.generate(width, height, len, type, redisTemplate);
-        CaptchaVO vo = new CaptchaVO();
-        vo.setCaptchaKey(result.getCaptchaKey());
-        vo.setCaptchaImage(result.getCaptchaImage());
-        vo.setType(result.getType());
-        return R.ok(vo);
+    public R<CaptchaVO> getCaptcha() {
+        CaptchaVO captchaVO = authService.generateCaptcha();
+        return R.ok(captchaVO);
     }
 
     /**

@@ -3,6 +3,7 @@ package com.scaffold.admin.service.impl;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.scaffold.admin.common.BusinessException;
+import com.scaffold.admin.common.RedisKeys;
 import com.scaffold.admin.common.ResultCode;
 import com.scaffold.admin.mapper.AdminLoginLogMapper;
 import com.scaffold.admin.mapper.AdminUserMapper;
@@ -11,10 +12,11 @@ import com.scaffold.admin.model.dto.RefreshTokenDTO;
 import com.scaffold.admin.model.dto.RegisterDTO;
 import com.scaffold.admin.model.entity.AdminLoginLog;
 import com.scaffold.admin.model.entity.AdminUser;
+import com.scaffold.admin.model.vo.CaptchaVO;
 import com.scaffold.admin.model.vo.LoginVO;
 import com.scaffold.admin.model.vo.UserVO;
-import com.scaffold.admin.security.AdminUserDetails;
 import com.scaffold.admin.security.JwtTokenProvider;
+import com.scaffold.admin.service.AdminUserService;
 import com.scaffold.admin.service.AuthService;
 import com.scaffold.admin.util.AuthCaptchaUtil;
 import jakarta.servlet.http.HttpServletRequest;
@@ -42,7 +44,6 @@ import java.util.concurrent.TimeUnit;
 @RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
 
-    private static final String LOGIN_FAIL_PREFIX = "login:fail:";
     private static final int MAX_LOGIN_FAIL_COUNT = 5;
     private static final long LOCK_DURATION = 15; // 锁定15分钟
 
@@ -53,6 +54,17 @@ public class AuthServiceImpl implements AuthService {
     private final PasswordEncoder passwordEncoder;
     private final RedisTemplate<String, Object> redisTemplate;
     private final HttpServletRequest httpServletRequest;
+    private final AdminUserService adminUserService;
+
+    @Override
+    public CaptchaVO generateCaptcha() {
+        AuthCaptchaUtil.CaptchaResult result = AuthCaptchaUtil.generate(redisTemplate);
+        CaptchaVO vo = new CaptchaVO();
+        vo.setCaptchaKey(result.getCaptchaKey());
+        vo.setCaptchaImage(result.getCaptchaImage());
+        vo.setType(result.getType());
+        return vo;
+    }
 
     @Override
     @Transactional
@@ -79,7 +91,7 @@ public class AuthServiceImpl implements AuthService {
             SecurityContextHolder.getContext().setAuthentication(authentication);
 
             // 获取认证用户信息
-            AdminUserDetails userDetails = (AdminUserDetails) authentication.getPrincipal();
+            AdminUserServiceImpl.AdminUserDetails userDetails = (AdminUserServiceImpl.AdminUserDetails) authentication.getPrincipal();
             AdminUser user = adminUserMapper.selectById(userDetails.getId());
 
             // 检查用户状态
@@ -203,7 +215,7 @@ public class AuthServiceImpl implements AuthService {
      * 检查账户是否被锁定
      */
     private void checkAccountLocked(String username) {
-        String key = LOGIN_FAIL_PREFIX + username;
+        String key = RedisKeys.LOGIN_FAIL.key(username);
         Object failCount = redisTemplate.opsForValue().get(key);
         if (failCount != null) {
             int count = Integer.parseInt(failCount.toString());
@@ -218,7 +230,7 @@ public class AuthServiceImpl implements AuthService {
      * 增加登录失败计数
      */
     private void incrementLoginFailCount(String username) {
-        String key = LOGIN_FAIL_PREFIX + username;
+        String key = RedisKeys.LOGIN_FAIL.key(username);
         Long count = redisTemplate.opsForValue().increment(key);
         if (count != null && count == 1) {
             // 首次失败，设置过期时间
@@ -231,7 +243,7 @@ public class AuthServiceImpl implements AuthService {
      * 清除登录失败计数
      */
     private void clearLoginFailCount(String username) {
-        String key = LOGIN_FAIL_PREFIX + username;
+        String key = RedisKeys.LOGIN_FAIL.key(username);
         redisTemplate.delete(key);
     }
 

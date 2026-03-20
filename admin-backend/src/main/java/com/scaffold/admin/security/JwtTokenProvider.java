@@ -6,6 +6,7 @@ import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.interfaces.DecodedJWT;
+import com.scaffold.admin.common.RedisKeys;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,7 +25,6 @@ import java.util.concurrent.TimeUnit;
 @RequiredArgsConstructor
 public class JwtTokenProvider {
 
-    private static final String BLACKLIST_PREFIX = "token:blacklist:";
     private static final String USER_ID_KEY = "userId";
     private static final String TOKEN_TYPE_KEY = "tokenType";
     private static final String ACCESS_TOKEN_TYPE = "access";
@@ -152,7 +152,7 @@ public class JwtTokenProvider {
         // 计算剩余过期时间，黑名单key的TTL设置为token的剩余有效期
         long remainingTime = jwt.getExpiresAt().getTime() - System.currentTimeMillis();
         if (remainingTime > 0) {
-            String key = BLACKLIST_PREFIX + token;
+            String key = RedisKeys.TOKEN_BLACKLIST.key(token);
             redisTemplate.opsForValue().set(key, "1", remainingTime, TimeUnit.MILLISECONDS);
             log.debug("Token已加入黑名单: {}", key);
         }
@@ -165,7 +165,7 @@ public class JwtTokenProvider {
         if (StrUtil.isBlank(token)) {
             return false;
         }
-        String key = BLACKLIST_PREFIX + token;
+        String key = RedisKeys.TOKEN_BLACKLIST.key(token);
         return Boolean.TRUE.equals(redisTemplate.hasKey(key));
     }
 

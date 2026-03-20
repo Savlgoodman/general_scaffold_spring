@@ -1,5 +1,6 @@
 package com.scaffold.admin.security;
 
+import com.scaffold.admin.service.AdminUserService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -28,7 +29,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private static final String BEARER_PREFIX = "Bearer ";
 
     private final JwtTokenProvider jwtTokenProvider;
-    private final UserDetailsServiceImpl userDetailsService;
+    private final AdminUserService adminUserService;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
@@ -52,7 +53,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     if (jwtTokenProvider.isAccessToken(token)) {
                         // 检查用户是否已认证
                         if (SecurityContextHolder.getContext().getAuthentication() == null) {
-                            UserDetails userDetails = userDetailsService.loadUserById(userId);
+                            UserDetails userDetails = adminUserService.loadUserById(userId);
                             UsernamePasswordAuthenticationToken authentication =
                                     new UsernamePasswordAuthenticationToken(
                                             userDetails,

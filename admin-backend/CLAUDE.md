@@ -23,6 +23,30 @@ mvn test
 
 ## 架构说明
 
+### MVC 分层原则（核心规范）
+
+**严格分层，职责明确：**
+
+- `controller/` — 控制器层
+  - 只负责：接收请求参数/请求体 → 调用 service 方法 → 返回结果
+  - 禁止：在 controller 层进行任何业务逻辑、数据库增删查改
+
+- `service/` — 业务逻辑层
+  - 负责：所有业务逻辑处理、事务管理
+  - 增删查改：只能通过 Mapper 操作数据库，禁止在 controller/util/其他层操作
+
+- `mapper/` — 数据访问层
+  - 只负责：数据库 CRUD 操作，对接 MyBatis-Plus BaseMapper
+
+- `util/` — 工具层
+  - 只放：纯算法、无状态工具类（如验证码生成、加密工具）
+  - 禁止：直接操作数据库
+
+- `common/` — 公共组件
+  - 放：枚举类、常量类、全局异常等共享组件
+
+**违反后果**：业务逻辑散落在各层会导致代码难以维护、测试困难、职责混乱。
+
 ### 分层结构
 
 - `controller/` — REST 接口层，路由前缀 `/api/admin/*`。所有方法必须标注 `@Tag`、`@Operation`、`@Schema` 注解以支持 OpenAPI 文档生成。
@@ -32,9 +56,10 @@ mvn test
 - `model/dto/` — 请求 DTO，全部字段带完整 `@Schema` 注解
 - `model/vo/` — 响应视图对象，全部字段带完整 `@Schema` 注解
 - `model/enums/` — 枚举类
-- `security/` — JWT 过滤器链、Token 提供者、UserDetailsService
+- `security/` — JWT 过滤器链、Token 提供者
 - `aspect/` — AOP 切面（API 日志切面、操作审计日志切面）
 - `handler/` — `@RestControllerAdvice` 全局异常处理器
+- `util/` — 工具类（纯算法、无状态）
 
 ### 关键约定
 
