@@ -35,20 +35,17 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { useToast } from '@/hooks/use-toast'
 import { Plus, Search, Pencil, Trash2, RefreshCw, FolderOpen, FileText } from 'lucide-react'
+import { list1 as listPermissions, getDetail1 } from '@/api/generated/permissions/permissions'
 import { apiClient } from '@/lib/api-client'
-import type { PermissionBaseVO } from '@/api/generated/model'
+import type {
+  PermissionBaseVO,
+  List1Params,
+} from '@/api/generated/model'
 
 interface ApiResponse<T> {
   code: number
   message: string
   data: T
-}
-
-interface PageData<T> {
-  records: T[]
-  total: number
-  current: number
-  size: number
 }
 
 interface PermissionFormData {
@@ -97,7 +94,7 @@ export default function PermissionManagement() {
   const fetchPermissions = useCallback(async () => {
     setLoading(true)
     try {
-      const params: Record<string, string | number> = {
+      const params: List1Params = {
         pageNum: current,
         pageSize: pageSize,
       }
@@ -105,14 +102,14 @@ export default function PermissionManagement() {
         params.keyword = searchKeyword
       }
 
-      const res = await apiClient.get<ApiResponse<PageData<PermissionBaseVO>>>('/permissions', { params })
-      const { code, data } = res.data
+      const res = await listPermissions(params)
+      const resData = res.data as unknown as { code: number; data: { records: PermissionBaseVO[]; total: number; current: number; size: number } }
 
-      if (code === 200) {
-        setPermissions(data.records || [])
-        setTotal(data.total || 0)
-        setCurrent(data.current || 1)
-        setPageSize(data.size || 10)
+      if (resData.code === 200) {
+        setPermissions(resData.data.records || [])
+        setTotal(resData.data.total || 0)
+        setCurrent(resData.data.current || 1)
+        setPageSize(resData.data.size || 10)
       }
     } catch {
       toast({ title: '获取权限列表失败', description: '请稍后重试', variant: 'destructive' })
@@ -139,20 +136,20 @@ export default function PermissionManagement() {
     setDialogOpen(true)
 
     try {
-      const res = await apiClient.get<ApiResponse<PermissionBaseVO>>(`/permissions/${id}`)
-      const { code, data } = res.data
+      const res = await getDetail1(id)
+      const resData = res.data as unknown as { code: number; data: PermissionBaseVO }
 
-      if (code === 200 && data) {
+      if (resData.code === 200 && resData.data) {
         setFormData({
-          name: data.name || '',
-          code: data.code || '',
-          path: data.path || '',
-          method: data.method || '*',
-          groupKey: data.groupKey || '',
-          groupName: data.groupName || '',
-          isGroup: data.isGroup ? 1 : 0,
-          status: data.status || 1,
-          sort: data.sort || 0,
+          name: resData.data.name || '',
+          code: resData.data.code || '',
+          path: resData.data.path || '',
+          method: resData.data.method || '*',
+          groupKey: resData.data.groupKey || '',
+          groupName: resData.data.groupName || '',
+          isGroup: resData.data.isGroup ? 1 : 0,
+          status: resData.data.status || 1,
+          sort: resData.data.sort || 0,
         })
       }
     } catch {
@@ -180,7 +177,7 @@ export default function PermissionManagement() {
     setFormLoading(true)
     try {
       if (editingId) {
-        const res = await apiClient.put<ApiResponse<null>>(`/permissions/${editingId}`, {
+        const res = await apiClient.post<ApiResponse<null>>(`/permissions/update/${editingId}`, {
           name: formData.name,
           path: formData.path,
           method: formData.method,
@@ -200,7 +197,7 @@ export default function PermissionManagement() {
           toast({ title: '更新权限失败', description: message, variant: 'destructive' })
         }
       } else {
-        const res = await apiClient.post<ApiResponse<null>>('/permissions', {
+        const res = await apiClient.post<ApiResponse<null>>('/permissions/create', {
           name: formData.name,
           code: formData.code,
           path: formData.path,
@@ -238,7 +235,7 @@ export default function PermissionManagement() {
 
     setDeletingLoading(true)
     try {
-      const res = await apiClient.delete<ApiResponse<null>>(`/permissions/${deletingId}`)
+      const res = await apiClient.post<ApiResponse<null>>(`/permissions/delete/${deletingId}`)
       const { code, message } = res.data
 
       if (code === 200) {

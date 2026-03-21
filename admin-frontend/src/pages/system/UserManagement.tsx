@@ -38,13 +38,22 @@ import { useToast } from '@/hooks/use-toast'
 import { Plus, Search, Pencil, Trash2, RefreshCw, UserCog, Shield, Check, X } from 'lucide-react'
 import { Checkbox } from '@/components/ui/checkbox'
 import { apiClient } from '@/lib/api-client'
+import {
+  getUserRoles,
+  assignUserRoles,
+  getUserPermissions,
+  getUserAvailablePermissions,
+  setBatchUserPermissionOverrides,
+} from '@/api/generated/admin-users-permission/admin-users-permission'
 import type {
   AdminUserVO,
   CreateAdminUserDTO,
   UpdateAdminUserDTO,
   RoleBaseVO,
-  UserPermissionVO,
-  UserAvailablePermissionVO,
+  UserGroupPermissionVO,
+  AssignRolesDTO,
+  BatchPermissionOverrideDTO,
+  PermissionOverrideItemDTO,
 } from '@/api/generated/model'
 
 interface ApiResponse<T> {
@@ -106,17 +115,18 @@ export default function UserManagement() {
   const [currentUserId, setCurrentUserId] = useState<number | null>(null)
   const [currentUsername, setCurrentUsername] = useState('')
   const [allRoles, setAllRoles] = useState<RoleBaseVO[]>([])
-  const [userRoles, setUserRoles] = useState<Set<number>>(new Set())
+  const [userRoleIds, setUserRoleIds] = useState<Set<number>>(new Set())
   const [roleLoading, setRoleLoading] = useState(false)
 
   // 权限覆盖弹窗
   const [permDialogOpen, setPermDialogOpen] = useState(false)
   const [permUserId, setPermUserId] = useState<number | null>(null)
   const [permUsername, setPermUsername] = useState('')
-  const [userEffectivePerms, setUserEffectivePerms] = useState<UserPermissionVO | null>(null)
-  const [userAvailablePerms, setUserAvailablePerms] = useState<UserAvailablePermissionVO | null>(null)
+  const [userEffectivePerms, setUserEffectivePerms] = useState<UserGroupPermissionVO[]>([])
+  const [userAvailablePerms, setUserAvailablePerms] = useState<{ groups: any[] } | null>(null)
   const [permLoading, setPermLoading] = useState(false)
-  const [selectedOverridePerms, setSelectedOverridePerms] = useState<Set<number>>(new Set())
+  // 权限覆盖：key为permissionId，value为effect
+  const [permOverrides, setPermOverrides] = useState<Map<number, string>>(new Map())
 
   const fetchUsers = useCallback(async () => {
     setLoading(true)
@@ -286,16 +296,16 @@ export default function UserManagement() {
 
     try {
       // 获取所有角色
-      const rolesRes = await apiClient.get<ApiResponse<PageData<RoleBaseVO>>>('/roles', { params: { current: 1, size: 100 } })
+      const rolesRes = await apiClient.get<ApiResponse<PageData<RoleBaseVO>>>('/roles', { params: { pageNum: 1, pageSize: 100 } })
       if (rolesRes.data.code === 200) {
         setAllRoles(rolesRes.data.data.records || [])
       }
 
       // 获取用户已有角色
-      const userRolesRes = await apiClient.get<ApiResponse<{ roles: RoleBaseVO[] }>>(`/admin-users/${user.id}/roles`)
-      if (userRolesRes.data.code === 200) {
-        const roleIds = new Set(userRolesRes.data.data.roles?.map(r => r.id).filter((id): id is number => id !== undefined) || [])
-        setUserRoles(roleIds)
+      const userRolesRes = await getUserRoles(user.id)
+      const userRolesData = userRolesRes.data as unknown as { code: number; data: { roleIds: number[] } }
+      if (userRolesData.code === 200) {
+        setUserRoleIds(new Set(userRolesData.data.roleIds || []))
       }
     } catch {
       toast({ title: '获取角色信息失败', variant: 'destructive' })
@@ -306,7 +316,7 @@ export default function UserManagement() {
 
   // 切换角色选中
   const toggleRole = (roleId: number) => {
-    setUserRoles(prev => {
+    setUserRoleIds(prev => {
       const newSet = new Set(prev)
       if (newSet.has(roleId)) {
         newSet.delete(roleId)
@@ -323,14 +333,19 @@ export default function UserManagement() {
 
     setRoleLoading(true)
     try {
-      const roleIds = Array.from(userRoles)
+      const dto: AssignRolesDTO = {
+        roleIds: Array.from(userRoleIds),
+      }
 
-      // 分配角色
-      await apiClient.post(`/admin-users/${currentUserId}/roles`, { roleIds })
+      const res = await assignUserRoles(currentUserId, dto)
+      const resData = res.data as unknown as { code: number; message: string }
 
-      toast({ title: '角色分配成功' })
-      setRoleDialogOpen(false)
-      fetchUsers()
+      if (resData.code === 200) {
+        toast({ title: '角色分配成功' })
+        setRoleDialogOpen(false)
+      } else {
+        toast({ title: '角色分配失败', description: resData.message, variant: 'destructive' })
+      }
     } catch {
       toast({ title: '角色分配失败', variant: 'destructive' })
     } finally {
@@ -346,19 +361,32 @@ export default function UserManagement() {
     setPermUsername(user.username || '')
     setPermDialogOpen(true)
     setPermLoading(true)
-    setSelectedOverridePerms(new Set())
+    setPermOverrides(new Map())
 
     try {
       // 获取用户有效权限
-      const effectiveRes = await apiClient.get<ApiResponse<UserPermissionVO>>(`/admin-users/${user.id}/permissions`)
-      if (effectiveRes.data.code === 200) {
-        setUserEffectivePerms(effectiveRes.data.data)
+      const effectiveRes = await getUserPermissions(user.id)
+      const effectiveData = effectiveRes.data as unknown as { code: number; data: { groups: UserGroupPermissionVO[] } }
+      if (effectiveData.code === 200) {
+        setUserEffectivePerms(effectiveData.data.groups || [])
+
+        // 构建现有覆盖Map
+        const overrideMap = new Map<number, string>()
+        effectiveData.data.groups?.forEach(group => {
+          group.children?.forEach(child => {
+            if (child.isOverridden && child.permissionId) {
+              overrideMap.set(child.permissionId, child.effect || 'ALLOW')
+            }
+          })
+        })
+        setPermOverrides(overrideMap)
       }
 
-      // 获取用户可用（未拥有）的权限
-      const availableRes = await apiClient.get<ApiResponse<UserAvailablePermissionVO>>(`/admin-users/${user.id}/permissions/available`)
-      if (availableRes.data.code === 200) {
-        setUserAvailablePerms(availableRes.data.data)
+      // 获取用户可用权限（用于添加新覆盖）
+      const availableRes = await getUserAvailablePermissions(user.id)
+      const availableData = availableRes.data as unknown as { code: number; data: { groups: any[] } }
+      if (availableData.code === 200) {
+        setUserAvailablePerms(availableData.data)
       }
     } catch {
       toast({ title: '获取权限信息失败', variant: 'destructive' })
@@ -368,15 +396,15 @@ export default function UserManagement() {
   }
 
   // 切换权限覆盖选中
-  const toggleOverridePerm = (permId: number) => {
-    setSelectedOverridePerms(prev => {
-      const newSet = new Set(prev)
-      if (newSet.has(permId)) {
-        newSet.delete(permId)
+  const toggleOverridePerm = (permId: number, effect: string) => {
+    setPermOverrides(prev => {
+      const newMap = new Map(prev)
+      if (newMap.has(permId)) {
+        newMap.delete(permId)
       } else {
-        newSet.add(permId)
+        newMap.set(permId, effect)
       }
-      return newSet
+      return newMap
     })
   }
 
@@ -386,15 +414,25 @@ export default function UserManagement() {
 
     setPermLoading(true)
     try {
-      for (const permId of selectedOverridePerms) {
-        await apiClient.post(`/admin-users/${permUserId}/permission-overrides`, {
-          permissionId: permId,
-          effect: 'GRANT',
-        })
-      }
+      const overrides: PermissionOverrideItemDTO[] = []
+      permOverrides.forEach((effect, permId) => {
+        overrides.push({ permissionId: permId, effect })
+      })
 
-      toast({ title: '权限覆盖设置成功' })
-      setPermDialogOpen(false)
+      if (overrides.length > 0) {
+        const dto: BatchPermissionOverrideDTO = { overrides }
+        const res = await setBatchUserPermissionOverrides(permUserId, dto)
+        const resData = res.data as unknown as { code: number; message: string }
+
+        if (resData.code === 200) {
+          toast({ title: '权限覆盖设置成功' })
+          setPermDialogOpen(false)
+        } else {
+          toast({ title: '权限覆盖设置失败', description: resData.message, variant: 'destructive' })
+        }
+      } else {
+        toast({ title: '请先勾选要设置的权限' })
+      }
     } catch {
       toast({ title: '权限覆盖设置失败', variant: 'destructive' })
     } finally {
@@ -692,7 +730,7 @@ export default function UserManagement() {
               {allRoles.map((role) => (
                 <div key={role.id} className="flex items-center gap-3 p-2 rounded hover:bg-muted/50">
                   <Checkbox
-                    checked={userRoles.has(role.id!)}
+                    checked={userRoleIds.has(role.id!)}
                     onCheckedChange={() => role.id && toggleRole(role.id)}
                   />
                   <div className="flex-1">
@@ -729,7 +767,7 @@ export default function UserManagement() {
         <DialogContent className="sm:max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
           <DialogHeader>
             <DialogTitle>权限覆盖 - {permUsername}</DialogTitle>
-            <DialogDescription>为用户设置额外的权限覆盖（可临时授予未分配的权限）</DialogDescription>
+            <DialogDescription>为用户设置额外的权限覆盖（勾选后设置ALLOW可授予额外权限，设置DENY可拒绝已有权限）</DialogDescription>
           </DialogHeader>
 
           {permLoading ? (
@@ -744,28 +782,30 @@ export default function UserManagement() {
               </TabsList>
 
               <TabsContent value="effective" className="flex-1 overflow-y-auto">
-                {userEffectivePerms?.groupedPermissions?.map((group) => (
+                {userEffectivePerms.map((group) => (
                   <div key={group.groupKey} className="border-b last:border-b-0 py-3">
                     <div className="font-medium text-sm mb-2">{group.groupName}</div>
                     <div className="space-y-1 pl-2">
                       {group.children?.map((perm) => (
                         <div key={perm.permissionId} className="flex items-center gap-2 text-sm">
-                          {perm.effect === 'GRANT' ? (
+                          {perm.isOverridden ? (
+                            <Badge variant="destructive" className="text-xs">已覆盖</Badge>
+                          ) : perm.effect === 'ALLOW' ? (
                             <Check className="w-3.5 h-3.5 text-emerald-500" />
                           ) : (
                             <X className="w-3.5 h-3.5 text-red-500" />
                           )}
                           <span>{perm.name}</span>
-                          <Badge variant="outline" className="text-xs ml-auto">
-                            {perm.source}
-                          </Badge>
+                          <span className="text-xs text-muted-foreground ml-auto">
+                            {perm.sourceDescription}
+                          </span>
                         </div>
                       ))}
                     </div>
                   </div>
                 ))}
 
-                {(!userEffectivePerms?.groupedPermissions || userEffectivePerms.groupedPermissions.length === 0) && (
+                {userEffectivePerms.length === 0 && (
                   <div className="text-center py-8 text-muted-foreground">
                     暂无有效权限
                   </div>
@@ -773,25 +813,29 @@ export default function UserManagement() {
               </TabsContent>
 
               <TabsContent value="available" className="flex-1 overflow-y-auto">
-                {userAvailablePerms?.unassignedPermissions?.map((group) => (
+                {userAvailablePerms?.groups?.map((group: any) => (
                   <div key={group.groupKey} className="border-b last:border-b-0 py-3">
                     <div className="font-medium text-sm mb-2">{group.groupName}</div>
                     <div className="space-y-1 pl-2">
-                      {group.permissions?.map((perm) => (
+                      {group.permissions?.map((perm: any) => (
                         <div key={perm.id} className="flex items-center gap-2 text-sm">
                           <Checkbox
-                            checked={selectedOverridePerms.has(perm.id!)}
-                            onCheckedChange={() => perm.id && toggleOverridePerm(perm.id)}
+                            checked={permOverrides.has(perm.id)}
+                            onCheckedChange={() => toggleOverridePerm(perm.id, 'ALLOW')}
                           />
                           <span>{perm.name}</span>
-                          <Badge variant="destructive" className="text-xs ml-auto">{perm.reason}</Badge>
+                          {perm.roleGranted ? (
+                            <Badge variant="secondary" className="text-xs ml-auto">角色已授权</Badge>
+                          ) : (
+                            <Badge variant="outline" className="text-xs ml-auto">未授权</Badge>
+                          )}
                         </div>
                       ))}
                     </div>
                   </div>
                 ))}
 
-                {(!userAvailablePerms?.unassignedPermissions || userAvailablePerms.unassignedPermissions.length === 0) && (
+                {(!userAvailablePerms?.groups || userAvailablePerms.groups.length === 0) && (
                   <div className="text-center py-8 text-muted-foreground">
                     暂无可添加覆盖的权限
                   </div>
@@ -802,8 +846,8 @@ export default function UserManagement() {
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setPermDialogOpen(false)}>关闭</Button>
-            <Button onClick={savePermissionOverrides} disabled={permLoading || selectedOverridePerms.size === 0}>
-              {permLoading ? '保存中...' : `添加覆盖 (${selectedOverridePerms.size})`}
+            <Button onClick={savePermissionOverrides} disabled={permLoading || permOverrides.size === 0}>
+              {permLoading ? '保存中...' : `保存覆盖 (${permOverrides.size})`}
             </Button>
           </DialogFooter>
         </DialogContent>
