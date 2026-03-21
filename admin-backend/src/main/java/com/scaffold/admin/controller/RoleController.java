@@ -6,8 +6,10 @@ import com.scaffold.admin.common.R;
 import com.scaffold.admin.common.ResultCode;
 import com.scaffold.admin.mapper.AdminRoleMapper;
 import com.scaffold.admin.model.dto.BatchRolePermissionDTO;
+import com.scaffold.admin.model.dto.CreateRoleDTO;
 import com.scaffold.admin.model.dto.RevokePermissionsDTO;
 import com.scaffold.admin.model.dto.RolePermissionDTO;
+import com.scaffold.admin.model.dto.UpdateRoleDTO;
 import com.scaffold.admin.model.entity.AdminRole;
 import com.scaffold.admin.model.vo.RoleAssignablePermissionVO;
 import com.scaffold.admin.model.vo.RoleBaseVO;
@@ -86,6 +88,66 @@ public class RoleController {
         vo.setStatus(role.getStatus());
         vo.setSort(role.getSort());
         return R.ok(vo);
+    }
+
+    @PostMapping
+    @Operation(summary = "创建角色", description = "创建新角色")
+    public R<RoleBaseVO> create(@RequestBody @Valid CreateRoleDTO dto) {
+        try {
+            AdminRole role = roleService.createRole(dto);
+            RoleBaseVO vo = new RoleBaseVO();
+            vo.setId(role.getId());
+            vo.setName(role.getName());
+            vo.setCode(role.getCode());
+            vo.setDescription(role.getDescription());
+            vo.setStatus(role.getStatus());
+            vo.setSort(role.getSort());
+            return R.ok(vo);
+        } catch (IllegalArgumentException e) {
+            return R.error(ResultCode.PARAM_ERROR, e.getMessage());
+        }
+    }
+
+    @PutMapping("/{id}")
+    @Operation(summary = "更新角色", description = "更新角色信息")
+    public R<RoleBaseVO> update(
+        @PathVariable Long id,
+        @RequestBody @Valid UpdateRoleDTO dto
+    ) {
+        try {
+            AdminRole role = roleService.updateRole(id, dto);
+            RoleBaseVO vo = new RoleBaseVO();
+            vo.setId(role.getId());
+            vo.setName(role.getName());
+            vo.setCode(role.getCode());
+            vo.setDescription(role.getDescription());
+            vo.setStatus(role.getStatus());
+            vo.setSort(role.getSort());
+            return R.ok(vo);
+        } catch (IllegalArgumentException e) {
+            return R.error(ResultCode.NOT_FOUND, e.getMessage());
+        }
+    }
+
+    @DeleteMapping("/{id}")
+    @Operation(summary = "删除角色", description = "删除单个角色")
+    public R<Void> delete(@PathVariable Long id) {
+        try {
+            roleService.deleteRole(id);
+            return R.ok();
+        } catch (IllegalArgumentException e) {
+            return R.error(ResultCode.NOT_FOUND, e.getMessage());
+        }
+    }
+
+    @DeleteMapping
+    @Operation(summary = "批量删除角色", description = "批量删除角色")
+    public R<Void> deleteBatch(@RequestParam List<Long> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return R.error(ResultCode.PARAM_ERROR, "角色ID列表不能为空");
+        }
+        roleService.deleteRoles(ids);
+        return R.ok();
     }
 
     @GetMapping("/{id}/permissions")

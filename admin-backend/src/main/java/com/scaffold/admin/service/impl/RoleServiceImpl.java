@@ -1,10 +1,13 @@
 package com.scaffold.admin.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.scaffold.admin.mapper.AdminPermissionMapper;
 import com.scaffold.admin.mapper.AdminRoleMapper;
 import com.scaffold.admin.mapper.AdminRolePermissionMapper;
+import com.scaffold.admin.model.dto.CreateRoleDTO;
 import com.scaffold.admin.model.dto.RolePermissionDTO;
+import com.scaffold.admin.model.dto.UpdateRoleDTO;
 import com.scaffold.admin.model.entity.AdminPermission;
 import com.scaffold.admin.model.entity.AdminRole;
 import com.scaffold.admin.model.entity.AdminRolePermission;
@@ -58,6 +61,86 @@ public class RoleServiceImpl implements RoleService {
                 .eq(AdminRole::getStatus, 1)
                 .orderByAsc(AdminRole::getSort)
         );
+    }
+
+    @Override
+    @Transactional
+    public AdminRole createRole(CreateRoleDTO dto) {
+        if (isCodeExists(dto.getCode())) {
+            throw new IllegalArgumentException("角色编码已存在: " + dto.getCode());
+        }
+
+        AdminRole role = new AdminRole();
+        role.setName(dto.getName());
+        role.setCode(dto.getCode());
+        role.setDescription(dto.getDescription());
+        role.setStatus(dto.getStatus() != null ? dto.getStatus() : 1);
+        role.setSort(dto.getSort() != null ? dto.getSort() : 0);
+
+        roleMapper.insert(role);
+        return role;
+    }
+
+    @Override
+    @Transactional
+    public AdminRole updateRole(Long id, UpdateRoleDTO dto) {
+        AdminRole role = roleMapper.selectById(id);
+        if (role == null) {
+            throw new IllegalArgumentException("角色不存在: " + id);
+        }
+
+        if (dto.getName() != null) {
+            role.setName(dto.getName());
+        }
+        if (dto.getDescription() != null) {
+            role.setDescription(dto.getDescription());
+        }
+        if (dto.getStatus() != null) {
+            role.setStatus(dto.getStatus());
+        }
+        if (dto.getSort() != null) {
+            role.setSort(dto.getSort());
+        }
+
+        roleMapper.updateById(role);
+        return role;
+    }
+
+    @Override
+    @Transactional
+    public void deleteRole(Long id) {
+        AdminRole role = roleMapper.selectById(id);
+        if (role == null) {
+            throw new IllegalArgumentException("角色不存在: " + id);
+        }
+
+        role.setIsDeleted(1);
+        roleMapper.updateById(role);
+    }
+
+    @Override
+    @Transactional
+    public void deleteRoles(List<Long> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return;
+        }
+
+        roleMapper.update(
+            new AdminRole(),
+            new LambdaUpdateWrapper<AdminRole>()
+                .in(AdminRole::getId, ids)
+                .set(AdminRole::getIsDeleted, 1)
+        );
+    }
+
+    @Override
+    public boolean isCodeExists(String code) {
+        Long count = roleMapper.selectCount(
+            new LambdaQueryWrapper<AdminRole>()
+                .eq(AdminRole::getCode, code)
+                .eq(AdminRole::getIsDeleted, 0)
+        );
+        return count != null && count > 0;
     }
 
     @Override

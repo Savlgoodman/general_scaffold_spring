@@ -1,6 +1,8 @@
 package com.scaffold.admin.service;
 
+import com.scaffold.admin.model.dto.CreateRoleDTO;
 import com.scaffold.admin.model.dto.RolePermissionDTO;
+import com.scaffold.admin.model.dto.UpdateRoleDTO;
 import com.scaffold.admin.model.entity.AdminRole;
 import com.scaffold.admin.model.vo.RoleAssignablePermissionVO;
 import com.scaffold.admin.model.vo.RolePermissionVO;
@@ -15,6 +17,16 @@ public interface RoleService {
     List<AdminRole> getAll();
 
     List<AdminRole> getActiveRoles();
+
+    AdminRole createRole(CreateRoleDTO dto);
+
+    AdminRole updateRole(Long id, UpdateRoleDTO dto);
+
+    void deleteRole(Long id);
+
+    void deleteRoles(List<Long> ids);
+
+    boolean isCodeExists(String code);
 
     void assignPermissions(Long roleId, List<RolePermissionDTO> permissions);
 

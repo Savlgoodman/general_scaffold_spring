@@ -122,8 +122,8 @@ export default function UserManagement() {
     setLoading(true)
     try {
       const params: Record<string, string | number> = {
-        current,
-        size: pageSize,
+        pageNum: current,
+        pageSize: pageSize,
       }
       if (searchKeyword) {
         params.keyword = searchKeyword
