@@ -37,14 +37,21 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useToast } from '@/hooks/use-toast'
 import { Plus, Search, Pencil, Trash2, RefreshCw, UserCog, Shield, Check, X } from 'lucide-react'
 import { Checkbox } from '@/components/ui/checkbox'
-import { apiClient } from '@/lib/api-client'
 import {
+  listAdminUsers,
+  getAdminUserDetail,
+  createAdminUser,
+  updateAdminUser,
+  deleteAdminUser,
+} from '@/api/admin-users'
+import {
+  listRoles,
   getUserRoles,
   assignUserRoles,
-  getUserPermissions,
+  getUserEffectivePermissions,
   getUserAvailablePermissions,
-  setBatchUserPermissionOverrides,
-} from '@/api/generated/admin-users-permission/admin-users-permission'
+  setUserPermissionOverrides,
+} from '@/api/user-permission'
 import type {
   AdminUserVO,
   CreateAdminUserDTO,
@@ -55,19 +62,6 @@ import type {
   BatchPermissionOverrideDTO,
   PermissionOverrideItemDTO,
 } from '@/api/generated/model'
-
-interface ApiResponse<T> {
-  code: number
-  message: string
-  data: T
-}
-
-interface PageData<T> {
-  records: T[]
-  total: number
-  current: number
-  size: number
-}
 
 interface UserFormData {
   username: string
@@ -131,22 +125,17 @@ export default function UserManagement() {
   const fetchUsers = useCallback(async () => {
     setLoading(true)
     try {
-      const params: Record<string, string | number> = {
+      const res = await listAdminUsers({
         pageNum: current,
         pageSize: pageSize,
-      }
-      if (searchKeyword) {
-        params.keyword = searchKeyword
-      }
+        keyword: searchKeyword || undefined,
+      })
 
-      const res = await apiClient.get<ApiResponse<PageData<AdminUserVO>>>('/admin-users', { params })
-      const { code, data } = res.data
-
-      if (code === 200) {
-        setUsers(data.records || [])
-        setTotal(data.total || 0)
-        setCurrent(data.current || 1)
-        setPageSize(data.size || 10)
+      if (res.code === 200) {
+        setUsers(res.data.records || [])
+        setTotal(res.data.total || 0)
+        setCurrent(res.data.current || 1)
+        setPageSize(res.data.size || 10)
       }
     } catch {
       toast({ title: '获取用户列表失败', description: '请稍后重试', variant: 'destructive' })
@@ -173,19 +162,18 @@ export default function UserManagement() {
     setDialogOpen(true)
 
     try {
-      const res = await apiClient.get<ApiResponse<AdminUserVO>>(`/admin-users/${id}`)
-      const { code, data } = res.data
+      const res = await getAdminUserDetail(id)
 
-      if (code === 200 && data) {
+      if (res.code === 200 && res.data) {
         setFormData({
-          username: data.username || '',
+          username: res.data.username || '',
           password: '',
-          nickname: data.nickname || '',
-          email: data.email || '',
-          phone: data.phone || '',
-          avatar: data.avatar || '',
-          isSuperuser: data.isSuperuser || 0,
-          status: data.status || 1,
+          nickname: res.data.nickname || '',
+          email: res.data.email || '',
+          phone: res.data.phone || '',
+          avatar: res.data.avatar || '',
+          isSuperuser: res.data.isSuperuser || 0,
+          status: res.data.status || 1,
         })
       }
     } catch {
@@ -218,15 +206,14 @@ export default function UserManagement() {
         if (formData.status !== undefined) updateData.status = formData.status
         if (formData.password) updateData.password = formData.password
 
-        const res = await apiClient.put<ApiResponse<null>>(`/admin-users/${editingId}`, updateData)
-        const { code, message } = res.data
+        const res = await updateAdminUser(editingId, updateData)
 
-        if (code === 200) {
+        if (res.code === 200) {
           toast({ title: '更新用户成功' })
           setDialogOpen(false)
           fetchUsers()
         } else {
-          toast({ title: '更新用户失败', description: message, variant: 'destructive' })
+          toast({ title: '更新用户失败', description: res.message, variant: 'destructive' })
         }
       } else {
         const createData: CreateAdminUserDTO = {
@@ -240,15 +227,14 @@ export default function UserManagement() {
           status: formData.status,
         }
 
-        const res = await apiClient.post<ApiResponse<null>>('/admin-users', createData)
-        const { code, message } = res.data
+        const res = await createAdminUser(createData)
 
-        if (code === 200) {
+        if (res.code === 200) {
           toast({ title: '创建用户成功' })
           setDialogOpen(false)
           fetchUsers()
         } else {
-          toast({ title: '创建用户失败', description: message, variant: 'destructive' })
+          toast({ title: '创建用户失败', description: res.message, variant: 'destructive' })
         }
       }
     } catch {
@@ -268,15 +254,14 @@ export default function UserManagement() {
 
     setDeletingLoading(true)
     try {
-      const res = await apiClient.delete<ApiResponse<null>>(`/admin-users/${deletingId}`)
-      const { code, message } = res.data
+      const res = await deleteAdminUser(deletingId)
 
-      if (code === 200) {
+      if (res.code === 200) {
         toast({ title: '删除用户成功' })
         setDeleteDialogOpen(false)
         fetchUsers()
       } else {
-        toast({ title: '删除用户失败', description: message, variant: 'destructive' })
+        toast({ title: '删除用户失败', description: res.message, variant: 'destructive' })
       }
     } catch {
       toast({ title: '删除失败', variant: 'destructive' })
@@ -296,16 +281,15 @@ export default function UserManagement() {
 
     try {
       // 获取所有角色
-      const rolesRes = await apiClient.get<ApiResponse<PageData<RoleBaseVO>>>('/roles', { params: { pageNum: 1, pageSize: 100 } })
-      if (rolesRes.data.code === 200) {
-        setAllRoles(rolesRes.data.data.records || [])
+      const rolesRes = await listRoles({ pageNum: 1, pageSize: 100 })
+      if (rolesRes.code === 200) {
+        setAllRoles(rolesRes.data.records || [])
       }
 
       // 获取用户已有角色
       const userRolesRes = await getUserRoles(user.id)
-      const userRolesData = userRolesRes.data as unknown as { code: number; data: { roleIds: number[] } }
-      if (userRolesData.code === 200) {
-        setUserRoleIds(new Set(userRolesData.data.roleIds || []))
+      if (userRolesRes.code === 200) {
+        setUserRoleIds(new Set(userRolesRes.data.roleIds || []))
       }
     } catch {
       toast({ title: '获取角色信息失败', variant: 'destructive' })
@@ -338,13 +322,12 @@ export default function UserManagement() {
       }
 
       const res = await assignUserRoles(currentUserId, dto)
-      const resData = res.data as unknown as { code: number; message: string }
 
-      if (resData.code === 200) {
+      if (res.code === 200) {
         toast({ title: '角色分配成功' })
         setRoleDialogOpen(false)
       } else {
-        toast({ title: '角色分配失败', description: resData.message, variant: 'destructive' })
+        toast({ title: '角色分配失败', description: res.message, variant: 'destructive' })
       }
     } catch {
       toast({ title: '角色分配失败', variant: 'destructive' })
@@ -365,14 +348,13 @@ export default function UserManagement() {
 
     try {
       // 获取用户有效权限
-      const effectiveRes = await getUserPermissions(user.id)
-      const effectiveData = effectiveRes.data as unknown as { code: number; data: { groups: UserGroupPermissionVO[] } }
-      if (effectiveData.code === 200) {
-        setUserEffectivePerms(effectiveData.data.groups || [])
+      const effectiveRes = await getUserEffectivePermissions(user.id)
+      if (effectiveRes.code === 200) {
+        setUserEffectivePerms(effectiveRes.data.groups || [])
 
         // 构建现有覆盖Map
         const overrideMap = new Map<number, string>()
-        effectiveData.data.groups?.forEach(group => {
+        effectiveRes.data.groups?.forEach(group => {
           group.children?.forEach(child => {
             if (child.isOverridden && child.permissionId) {
               overrideMap.set(child.permissionId, child.effect || 'ALLOW')
@@ -384,9 +366,8 @@ export default function UserManagement() {
 
       // 获取用户可用权限（用于添加新覆盖）
       const availableRes = await getUserAvailablePermissions(user.id)
-      const availableData = availableRes.data as unknown as { code: number; data: { groups: any[] } }
-      if (availableData.code === 200) {
-        setUserAvailablePerms(availableData.data)
+      if (availableRes.code === 200) {
+        setUserAvailablePerms(availableRes.data)
       }
     } catch {
       toast({ title: '获取权限信息失败', variant: 'destructive' })
@@ -421,14 +402,13 @@ export default function UserManagement() {
 
       if (overrides.length > 0) {
         const dto: BatchPermissionOverrideDTO = { overrides }
-        const res = await setBatchUserPermissionOverrides(permUserId, dto)
-        const resData = res.data as unknown as { code: number; message: string }
+        const res = await setUserPermissionOverrides(permUserId, dto)
 
-        if (resData.code === 200) {
+        if (res.code === 200) {
           toast({ title: '权限覆盖设置成功' })
           setPermDialogOpen(false)
         } else {
-          toast({ title: '权限覆盖设置失败', description: resData.message, variant: 'destructive' })
+          toast({ title: '权限覆盖设置失败', description: res.message, variant: 'destructive' })
         }
       } else {
         toast({ title: '请先勾选要设置的权限' })

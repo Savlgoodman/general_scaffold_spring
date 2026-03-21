@@ -37,24 +37,20 @@ import { useToast } from '@/hooks/use-toast'
 import { Plus, Search, Pencil, Trash2, RefreshCw, Shield, Check } from 'lucide-react'
 import { Checkbox } from '@/components/ui/checkbox'
 import {
-  list as listRoles,
-  getDetail,
-  create as createRole,
-  update as updateRole,
-  _delete as deleteRole,
-  getAssignablePermissions,
-  assignGroupPermissions,
-  assignChildPermissions,
-} from '@/api/generated/roles/roles'
+  listRoles,
+  getRoleDetail,
+  createRole,
+  updateRole,
+  deleteRole,
+  getRoleAssignablePermissions,
+  assignRoleGroupPermissions,
+  assignRoleChildPermissions,
+} from '@/api/roles'
 import type {
   RoleBaseVO,
-  RoleAssignablePermissionVO,
   AssignableGroupVO,
-  ListParams,
   BatchRolePermissionDTO,
   RolePermissionDTO,
-  CreateRoleDTO,
-  UpdateRoleDTO,
 } from '@/api/generated/model'
 
 interface RoleFormData {
@@ -101,22 +97,17 @@ export default function RoleManagement() {
   const fetchRoles = useCallback(async () => {
     setLoading(true)
     try {
-      const params: ListParams = {
+      const res = await listRoles({
         pageNum: current,
         pageSize: pageSize,
-      }
-      if (searchKeyword) {
-        params.keyword = searchKeyword
-      }
+        keyword: searchKeyword || undefined,
+      })
 
-      const res = await listRoles(params)
-      const resData = res.data as unknown as { code: number; data: { records: RoleBaseVO[]; total: number; current: number; size: number } }
-
-      if (resData.code === 200) {
-        setRoles(resData.data.records || [])
-        setTotal(resData.data.total || 0)
-        setCurrent(resData.data.current || 1)
-        setPageSize(resData.data.size || 10)
+      if (res.code === 200) {
+        setRoles(res.data.records || [])
+        setTotal(res.data.total || 0)
+        setCurrent(res.data.current || 1)
+        setPageSize(res.data.size || 10)
       }
     } catch {
       toast({ title: '获取角色列表失败', description: '请稍后重试', variant: 'destructive' })
@@ -143,15 +134,14 @@ export default function RoleManagement() {
     setDialogOpen(true)
 
     try {
-      const res = await getDetail(id)
-      const resData = res.data as unknown as { code: number; data: RoleBaseVO }
+      const res = await getRoleDetail(id)
 
-      if (resData.code === 200 && resData.data) {
+      if (res.code === 200 && res.data) {
         setFormData({
-          name: resData.data.name || '',
-          code: resData.data.code || '',
-          description: resData.data.description || '',
-          status: resData.data.status || 1,
+          name: res.data.name || '',
+          code: res.data.code || '',
+          description: res.data.description || '',
+          status: res.data.status || 1,
         })
       }
     } catch {
@@ -175,37 +165,33 @@ export default function RoleManagement() {
     setFormLoading(true)
     try {
       if (editingId) {
-        const updateData: UpdateRoleDTO = {
+        const res = await updateRole(editingId, {
           name: formData.name,
           description: formData.description,
           status: formData.status,
-        }
-        const res = await updateRole(editingId, updateData)
-        const resData = res.data as unknown as { code: number; message: string }
+        })
 
-        if (resData.code === 200) {
+        if (res.code === 200) {
           toast({ title: '更新角色成功' })
           setDialogOpen(false)
           fetchRoles()
         } else {
-          toast({ title: '更新角色失败', description: resData.message, variant: 'destructive' })
+          toast({ title: '更新角色失败', description: res.message, variant: 'destructive' })
         }
       } else {
-        const createData: CreateRoleDTO = {
+        const res = await createRole({
           name: formData.name,
           code: formData.code,
           description: formData.description,
           status: formData.status,
-        }
-        const res = await createRole(createData)
-        const resData = res.data as unknown as { code: number; message: string }
+        })
 
-        if (resData.code === 200) {
+        if (res.code === 200) {
           toast({ title: '创建角色成功' })
           setDialogOpen(false)
           fetchRoles()
         } else {
-          toast({ title: '创建角色失败', description: resData.message, variant: 'destructive' })
+          toast({ title: '创建角色失败', description: res.message, variant: 'destructive' })
         }
       }
     } catch {
@@ -226,14 +212,13 @@ export default function RoleManagement() {
     setDeletingLoading(true)
     try {
       const res = await deleteRole(deletingId)
-      const resData = res.data as unknown as { code: number; message: string }
 
-      if (resData.code === 200) {
+      if (res.code === 200) {
         toast({ title: '删除角色成功' })
         setDeleteDialogOpen(false)
         fetchRoles()
       } else {
-        toast({ title: '删除角色失败', description: resData.message, variant: 'destructive' })
+        toast({ title: '删除角色失败', description: res.message, variant: 'destructive' })
       }
     } catch {
       toast({ title: '删除失败', variant: 'destructive' })
@@ -254,15 +239,14 @@ export default function RoleManagement() {
 
     try {
       // 获取可分配权限
-      const assignableRes = await getAssignablePermissions(role.id)
-      const assignableData = assignableRes.data as unknown as { code: number; data: RoleAssignablePermissionVO }
+      const assignableRes = await getRoleAssignablePermissions(role.id)
 
-      if (assignableData.code === 200) {
-        setAssignablePermissions(assignableData.data.groups || [])
+      if (assignableRes.code === 200) {
+        setAssignablePermissions(assignableRes.data.groups || [])
 
         // 从可分配权限构建选中集合（已分配的）
         const assignedIds = new Set<number>()
-        assignableData.data.groups?.forEach(group => {
+        assignableRes.data.groups?.forEach(group => {
           if (group.groupPermission?.isAssigned && group.groupPermission.id) {
             assignedIds.add(group.groupPermission.id)
           }
@@ -376,13 +360,13 @@ export default function RoleManagement() {
       // 分配组权限
       if (groupPerms.length > 0) {
         const dto: BatchRolePermissionDTO = { permissions: groupPerms }
-        await assignGroupPermissions(currentRoleId, dto)
+        await assignRoleGroupPermissions(currentRoleId, dto)
       }
 
       // 分配子权限
       if (childPerms.length > 0) {
         const dto: BatchRolePermissionDTO = { permissions: childPerms }
-        await assignChildPermissions(currentRoleId, dto)
+        await assignRoleChildPermissions(currentRoleId, dto)
       }
 
       toast({ title: '权限分配成功' })

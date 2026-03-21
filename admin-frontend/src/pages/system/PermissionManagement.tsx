@@ -35,18 +35,16 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { useToast } from '@/hooks/use-toast'
 import { Plus, Search, Pencil, Trash2, RefreshCw, FolderOpen, FileText } from 'lucide-react'
-import { list1 as listPermissions, getDetail1 } from '@/api/generated/permissions/permissions'
-import { apiClient } from '@/lib/api-client'
+import {
+  listPermissions,
+  getPermissionDetail,
+  createPermission,
+  updatePermission,
+  deletePermission,
+} from '@/api/permissions'
 import type {
   PermissionBaseVO,
-  List1Params,
 } from '@/api/generated/model'
-
-interface ApiResponse<T> {
-  code: number
-  message: string
-  data: T
-}
 
 interface PermissionFormData {
   name: string
@@ -94,22 +92,17 @@ export default function PermissionManagement() {
   const fetchPermissions = useCallback(async () => {
     setLoading(true)
     try {
-      const params: List1Params = {
+      const res = await listPermissions({
         pageNum: current,
         pageSize: pageSize,
-      }
-      if (searchKeyword) {
-        params.keyword = searchKeyword
-      }
+        keyword: searchKeyword || undefined,
+      })
 
-      const res = await listPermissions(params)
-      const resData = res.data as unknown as { code: number; data: { records: PermissionBaseVO[]; total: number; current: number; size: number } }
-
-      if (resData.code === 200) {
-        setPermissions(resData.data.records || [])
-        setTotal(resData.data.total || 0)
-        setCurrent(resData.data.current || 1)
-        setPageSize(resData.data.size || 10)
+      if (res.code === 200) {
+        setPermissions(res.data.records || [])
+        setTotal(res.data.total || 0)
+        setCurrent(res.data.current || 1)
+        setPageSize(res.data.size || 10)
       }
     } catch {
       toast({ title: '获取权限列表失败', description: '请稍后重试', variant: 'destructive' })
@@ -136,20 +129,19 @@ export default function PermissionManagement() {
     setDialogOpen(true)
 
     try {
-      const res = await getDetail1(id)
-      const resData = res.data as unknown as { code: number; data: PermissionBaseVO }
+      const res = await getPermissionDetail(id)
 
-      if (resData.code === 200 && resData.data) {
+      if (res.code === 200 && res.data) {
         setFormData({
-          name: resData.data.name || '',
-          code: resData.data.code || '',
-          path: resData.data.path || '',
-          method: resData.data.method || '*',
-          groupKey: resData.data.groupKey || '',
-          groupName: resData.data.groupName || '',
-          isGroup: resData.data.isGroup ? 1 : 0,
-          status: resData.data.status || 1,
-          sort: resData.data.sort || 0,
+          name: res.data.name || '',
+          code: res.data.code || '',
+          path: res.data.path || '',
+          method: res.data.method || '*',
+          groupKey: res.data.groupKey || '',
+          groupName: res.data.groupName || '',
+          isGroup: res.data.isGroup ? 1 : 0,
+          status: res.data.status || 1,
+          sort: res.data.sort || 0,
         })
       }
     } catch {
@@ -177,45 +169,43 @@ export default function PermissionManagement() {
     setFormLoading(true)
     try {
       if (editingId) {
-        const res = await apiClient.post<ApiResponse<null>>(`/permissions/update/${editingId}`, {
+        const res = await updatePermission(editingId, {
           name: formData.name,
           path: formData.path,
           method: formData.method,
           groupKey: formData.groupKey,
           groupName: formData.groupName,
-          isGroup: formData.isGroup,
+          isGroup: formData.isGroup === 1,
           status: formData.status,
           sort: formData.sort,
         })
-        const { code, message } = res.data
 
-        if (code === 200) {
+        if (res.code === 200) {
           toast({ title: '更新权限成功' })
           setDialogOpen(false)
           fetchPermissions()
         } else {
-          toast({ title: '更新权限失败', description: message, variant: 'destructive' })
+          toast({ title: '更新权限失败', description: res.message, variant: 'destructive' })
         }
       } else {
-        const res = await apiClient.post<ApiResponse<null>>('/permissions/create', {
+        const res = await createPermission({
           name: formData.name,
           code: formData.code,
           path: formData.path,
           method: formData.method,
           groupKey: formData.groupKey,
           groupName: formData.groupName,
-          isGroup: formData.isGroup,
+          isGroup: formData.isGroup === 1,
           status: formData.status,
           sort: formData.sort,
         })
-        const { code, message } = res.data
 
-        if (code === 200) {
+        if (res.code === 200) {
           toast({ title: '创建权限成功' })
           setDialogOpen(false)
           fetchPermissions()
         } else {
-          toast({ title: '创建权限失败', description: message, variant: 'destructive' })
+          toast({ title: '创建权限失败', description: res.message, variant: 'destructive' })
         }
       }
     } catch {
@@ -235,15 +225,14 @@ export default function PermissionManagement() {
 
     setDeletingLoading(true)
     try {
-      const res = await apiClient.post<ApiResponse<null>>(`/permissions/delete/${deletingId}`)
-      const { code, message } = res.data
+      const res = await deletePermission(deletingId)
 
-      if (code === 200) {
+      if (res.code === 200) {
         toast({ title: '删除权限成功' })
         setDeleteDialogOpen(false)
         fetchPermissions()
       } else {
-        toast({ title: '删除权限失败', description: message, variant: 'destructive' })
+        toast({ title: '删除权限失败', description: res.message, variant: 'destructive' })
       }
     } catch {
       toast({ title: '删除失败', variant: 'destructive' })
