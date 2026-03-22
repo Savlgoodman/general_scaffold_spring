@@ -53,7 +53,7 @@ public class AdminUserPermissionController {
     }
 
     @PostMapping("/{id}/roles")
-    @Operation(summary = "分配用户角色", description = "分配角色给用户")
+    @Operation(summary = "同步用户角色", description = "同步用户角色（全量替换，传入的为最终角色列表）")
     public R<Void> assignUserRoles(
         @PathVariable Long id,
         @RequestBody @Valid AssignRolesDTO dto
@@ -62,7 +62,7 @@ public class AdminUserPermissionController {
         if (user == null) {
             return R.error(ResultCode.NOT_FOUND, "用户不存在");
         }
-        rbacService.assignUserRoles(id, dto.getRoleIds());
+        rbacService.syncUserRoles(id, dto.getRoleIds());
         return R.ok();
     }
 
