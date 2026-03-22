@@ -71,14 +71,28 @@ public class PermissionServiceImpl implements PermissionService {
             return false;
         }
 
-        // 处理 ** 通配符（匹配多级路径）
+        // 处理 ** 通配符（匹配当前路径及所有子路径）
+        // /api/admin/users/** 应匹配:
+        //   /api/admin/users
+        //   /api/admin/users/
+        //   /api/admin/users/123
+        //   /api/admin/users/123/roles
         if (pattern.contains("**")) {
-            String regex = pattern
-                .replace("**", "<<<DS>>>")
-                .replace("*", "[^/]*")
-                .replace("?", "[^/]")
-                .replace("<<<DS>>>", ".*");
-            return Pattern.matches("^" + regex + "$", path);
+            // 提取 ** 之前的前缀（如 /api/admin/users/）
+            int dsIndex = pattern.indexOf("**");
+            String prefix = pattern.substring(0, dsIndex);
+            // 去掉末尾斜杠用于前缀匹配
+            String prefixNoSlash = prefix.endsWith("/") ? prefix.substring(0, prefix.length() - 1) : prefix;
+
+            // 精确匹配前缀本身（如 /api/admin/users）
+            if (path.equals(prefixNoSlash)) {
+                return true;
+            }
+            // 匹配前缀下的所有子路径（如 /api/admin/users/xxx）
+            if (path.startsWith(prefix)) {
+                return true;
+            }
+            return false;
         }
 
         // 处理单级通配符 * 和 ?
