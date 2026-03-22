@@ -6,316 +6,154 @@
  * OpenAPI spec version: 1.0.0
  */
 import type {
-  BatchRolePermissionDTO,
+  CreateRoleDTO,
+  DeleteBatchParams,
   ListParams,
-  RevokePermissionsDTO
+  RPageRoleBaseVO,
+  RRoleBaseVO,
+  RRolePermissionFullVO,
+  RVoid,
+  RevokePermissionsDTO,
+  SyncRolePermissionsDTO,
+  UpdateRoleDTO
 } from '../model';
 
-
-/**
- * 批量分配组权限给角色
- * @summary 分配组权限
- */
-export type assignGroupPermissionsResponse200 = {
-  data: Blob
-  status: 200
-}
-
-export type assignGroupPermissionsResponseSuccess = (assignGroupPermissionsResponse200) & {
-  headers: Headers;
-};
-;
-
-export type assignGroupPermissionsResponse = (assignGroupPermissionsResponseSuccess)
-
-export const getAssignGroupPermissionsUrl = (id: number,) => {
+import { customInstance } from '../../custom-instance';
+import type { BodyType } from '../../custom-instance';
 
 
-  
-
-  return `/api/admin/roles/${id}/permissions/groups`
-}
-
-export const assignGroupPermissions = async (id: number,
-    batchRolePermissionDTO: BatchRolePermissionDTO, options?: RequestInit): Promise<assignGroupPermissionsResponse> => {
-  
-  const res = await fetch(getAssignGroupPermissionsUrl(id),
-  {      
-    ...options,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      batchRolePermissionDTO,)
-  }
-)
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-  
-  const data: assignGroupPermissionsResponse['data'] = body ? JSON.parse(body) : {}
-  return { data, status: res.status, headers: res.headers } as assignGroupPermissionsResponse
-}
-  
-
-/**
- * 批量分配子权限给角色
- * @summary 分配子权限
- */
-export type assignChildPermissionsResponse200 = {
-  data: Blob
-  status: 200
-}
-
-export type assignChildPermissionsResponseSuccess = (assignChildPermissionsResponse200) & {
-  headers: Headers;
-};
-;
-
-export type assignChildPermissionsResponse = (assignChildPermissionsResponseSuccess)
-
-export const getAssignChildPermissionsUrl = (id: number,) => {
+type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
 
-  
-
-  return `/api/admin/roles/${id}/permissions/children`
-}
-
-export const assignChildPermissions = async (id: number,
-    batchRolePermissionDTO: BatchRolePermissionDTO, options?: RequestInit): Promise<assignChildPermissionsResponse> => {
-  
-  const res = await fetch(getAssignChildPermissionsUrl(id),
-  {      
-    ...options,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      batchRolePermissionDTO,)
-  }
-)
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-  
-  const data: assignChildPermissionsResponse['data'] = body ? JSON.parse(body) : {}
-  return { data, status: res.status, headers: res.headers } as assignChildPermissionsResponse
-}
-  
-
-/**
- * 分页获取角色列表
- * @summary 角色列表
- */
-export type listResponse200 = {
-  data: Blob
-  status: 200
-}
-
-export type listResponseSuccess = (listResponse200) & {
-  headers: Headers;
-};
-;
-
-export type listResponse = (listResponseSuccess)
-
-export const getListUrl = (params?: ListParams,) => {
-  const normalizedParams = new URLSearchParams();
-
-  Object.entries(params || {}).forEach(([key, value]) => {
-    
-    if (value !== undefined) {
-      normalizedParams.append(key, value === null ? 'null' : value.toString())
-    }
-  });
-
-  const stringifiedParams = normalizedParams.toString();
-
-  return stringifiedParams.length > 0 ? `/api/admin/roles?${stringifiedParams}` : `/api/admin/roles`
-}
-
-export const list = async (params?: ListParams, options?: RequestInit): Promise<listResponse> => {
-  
-  const res = await fetch(getListUrl(params),
-  {      
-    ...options,
-    method: 'GET'
-    
-    
-  }
-)
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-  
-  const data: listResponse['data'] = body ? JSON.parse(body) : {}
-  return { data, status: res.status, headers: res.headers } as listResponse
-}
-  
-
+  export const getRoles = () => {
 /**
  * 获取角色详情
  * @summary 角色详情
  */
-export type getDetailResponse200 = {
-  data: Blob
-  status: 200
-}
-
-export type getDetailResponseSuccess = (getDetailResponse200) & {
-  headers: Headers;
-};
-;
-
-export type getDetailResponse = (getDetailResponseSuccess)
-
-export const getGetDetailUrl = (id: number,) => {
-
-
-  
-
-  return `/api/admin/roles/${id}`
-}
-
-export const getDetail = async (id: number, options?: RequestInit): Promise<getDetailResponse> => {
-  
-  const res = await fetch(getGetDetailUrl(id),
-  {      
-    ...options,
-    method: 'GET'
-    
-    
-  }
-)
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-  
-  const data: getDetailResponse['data'] = body ? JSON.parse(body) : {}
-  return { data, status: res.status, headers: res.headers } as getDetailResponse
-}
-  
-
-/**
- * 获取角色已分配权限（含分组结构）
- * @summary 角色权限详情
+const getDetail = (
+    id: number,
+ options?: SecondParameter<typeof customInstance<RRoleBaseVO>>,) => {
+      return customInstance<RRoleBaseVO>(
+      {url: `/api/admin/roles/${id}`, method: 'GET'
+    },
+      options);
+    }
+  /**
+ * 更新角色信息
+ * @summary 更新角色
  */
-export type getPermissionsResponse200 = {
-  data: Blob
-  status: 200
-}
-
-export type getPermissionsResponseSuccess = (getPermissionsResponse200) & {
-  headers: Headers;
-};
-;
-
-export type getPermissionsResponse = (getPermissionsResponseSuccess)
-
-export const getGetPermissionsUrl = (id: number,) => {
-
-
-  
-
-  return `/api/admin/roles/${id}/permissions`
-}
-
-export const getPermissions = async (id: number, options?: RequestInit): Promise<getPermissionsResponse> => {
-  
-  const res = await fetch(getGetPermissionsUrl(id),
-  {      
-    ...options,
-    method: 'GET'
-    
-    
-  }
-)
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-  
-  const data: getPermissionsResponse['data'] = body ? JSON.parse(body) : {}
-  return { data, status: res.status, headers: res.headers } as getPermissionsResponse
-}
-  
-
-/**
+const update = (
+    id: number,
+    updateRoleDTO: BodyType<UpdateRoleDTO>,
+ options?: SecondParameter<typeof customInstance<RRoleBaseVO>>,) => {
+      return customInstance<RRoleBaseVO>(
+      {url: `/api/admin/roles/${id}`, method: 'PUT',
+      headers: {'Content-Type': 'application/json', },
+      data: updateRoleDTO
+    },
+      options);
+    }
+  /**
+ * 删除单个角色
+ * @summary 删除角色
+ */
+const _delete = (
+    id: number,
+ options?: SecondParameter<typeof customInstance<RVoid>>,) => {
+      return customInstance<RVoid>(
+      {url: `/api/admin/roles/${id}`, method: 'DELETE'
+    },
+      options);
+    }
+  /**
+ * 获取角色所有权限���分配状态（含组覆盖标记）
+ * @summary 角色权限完整视图
+ */
+const getPermissions = (
+    id: number,
+ options?: SecondParameter<typeof customInstance<RRolePermissionFullVO>>,) => {
+      return customInstance<RRolePermissionFullVO>(
+      {url: `/api/admin/roles/${id}/permissions`, method: 'GET'
+    },
+      options);
+    }
+  /**
+ * 原子同步角色权限（对比差异，批量增删改）
+ * @summary 同步角色权限
+ */
+const syncPermissions = (
+    id: number,
+    syncRolePermissionsDTO: BodyType<SyncRolePermissionsDTO>,
+ options?: SecondParameter<typeof customInstance<RVoid>>,) => {
+      return customInstance<RVoid>(
+      {url: `/api/admin/roles/${id}/permissions`, method: 'PUT',
+      headers: {'Content-Type': 'application/json', },
+      data: syncRolePermissionsDTO
+    },
+      options);
+    }
+  /**
  * 批量撤销角色权限
  * @summary 批量撤销角色权限
  */
-export type revokePermissionsResponse200 = {
-  data: Blob
-  status: 200
-}
-
-export type revokePermissionsResponseSuccess = (revokePermissionsResponse200) & {
-  headers: Headers;
-};
-;
-
-export type revokePermissionsResponse = (revokePermissionsResponseSuccess)
-
-export const getRevokePermissionsUrl = (id: number,) => {
-
-
-  
-
-  return `/api/admin/roles/${id}/permissions`
-}
-
-export const revokePermissions = async (id: number,
-    revokePermissionsDTO: RevokePermissionsDTO, options?: RequestInit): Promise<revokePermissionsResponse> => {
-  
-  const res = await fetch(getRevokePermissionsUrl(id),
-  {      
-    ...options,
-    method: 'DELETE',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      revokePermissionsDTO,)
-  }
-)
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-  
-  const data: revokePermissionsResponse['data'] = body ? JSON.parse(body) : {}
-  return { data, status: res.status, headers: res.headers } as revokePermissionsResponse
-}
-  
-
-/**
- * 获取可分配的权限（已分配/未分配状态）
- * @summary 角色可分配权限
+const revokePermissions = (
+    id: number,
+    revokePermissionsDTO: BodyType<RevokePermissionsDTO>,
+ options?: SecondParameter<typeof customInstance<RVoid>>,) => {
+      return customInstance<RVoid>(
+      {url: `/api/admin/roles/${id}/permissions`, method: 'DELETE',
+      headers: {'Content-Type': 'application/json', },
+      data: revokePermissionsDTO
+    },
+      options);
+    }
+  /**
+ * 分页获取角色列表
+ * @summary 角色列表
  */
-export type getAssignablePermissionsResponse200 = {
-  data: Blob
-  status: 200
-}
-
-export type getAssignablePermissionsResponseSuccess = (getAssignablePermissionsResponse200) & {
-  headers: Headers;
-};
-;
-
-export type getAssignablePermissionsResponse = (getAssignablePermissionsResponseSuccess)
-
-export const getGetAssignablePermissionsUrl = (id: number,) => {
-
-
-  
-
-  return `/api/admin/roles/${id}/permissions/assignable`
-}
-
-export const getAssignablePermissions = async (id: number, options?: RequestInit): Promise<getAssignablePermissionsResponse> => {
-  
-  const res = await fetch(getGetAssignablePermissionsUrl(id),
-  {      
-    ...options,
-    method: 'GET'
-    
-    
-  }
-)
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-  
-  const data: getAssignablePermissionsResponse['data'] = body ? JSON.parse(body) : {}
-  return { data, status: res.status, headers: res.headers } as getAssignablePermissionsResponse
-}
-  
-
+const list = (
+    params?: ListParams,
+ options?: SecondParameter<typeof customInstance<RPageRoleBaseVO>>,) => {
+      return customInstance<RPageRoleBaseVO>(
+      {url: `/api/admin/roles`, method: 'GET',
+        params
+    },
+      options);
+    }
+  /**
+ * 创建新角色
+ * @summary 创建角色
+ */
+const create = (
+    createRoleDTO: BodyType<CreateRoleDTO>,
+ options?: SecondParameter<typeof customInstance<RRoleBaseVO>>,) => {
+      return customInstance<RRoleBaseVO>(
+      {url: `/api/admin/roles`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: createRoleDTO
+    },
+      options);
+    }
+  /**
+ * 批量删除角色
+ * @summary 批量删除角色
+ */
+const deleteBatch = (
+    params: DeleteBatchParams,
+ options?: SecondParameter<typeof customInstance<RVoid>>,) => {
+      return customInstance<RVoid>(
+      {url: `/api/admin/roles`, method: 'DELETE',
+        params
+    },
+      options);
+    }
+  return {getDetail,update,_delete,getPermissions,syncPermissions,revokePermissions,list,create,deleteBatch}};
+export type GetDetailResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getRoles>['getDetail']>>>
+export type UpdateResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getRoles>['update']>>>
+export type _DeleteResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getRoles>['_delete']>>>
+export type GetPermissionsResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getRoles>['getPermissions']>>>
+export type SyncPermissionsResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getRoles>['syncPermissions']>>>
+export type RevokePermissionsResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getRoles>['revokePermissions']>>>
+export type ListResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getRoles>['list']>>>
+export type CreateResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getRoles>['create']>>>
+export type DeleteBatchResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getRoles>['deleteBatch']>>>

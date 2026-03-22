@@ -6,140 +6,57 @@
  * OpenAPI spec version: 1.0.0
  */
 import type {
-  List1Params
+  List1Params,
+  RListPermissionGroupVO,
+  RPagePermissionBaseVO,
+  RPermissionBaseVO
 } from '../model';
 
+import { customInstance } from '../../custom-instance';
 
+
+type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
+
+
+  export const getPermissions = () => {
 /**
  * 分页获取权限列表
  * @summary 权限列表
  */
-export type list1Response200 = {
-  data: Blob
-  status: 200
-}
-
-export type list1ResponseSuccess = (list1Response200) & {
-  headers: Headers;
-};
-;
-
-export type list1Response = (list1ResponseSuccess)
-
-export const getList1Url = (params?: List1Params,) => {
-  const normalizedParams = new URLSearchParams();
-
-  Object.entries(params || {}).forEach(([key, value]) => {
-    
-    if (value !== undefined) {
-      normalizedParams.append(key, value === null ? 'null' : value.toString())
+const list1 = (
+    params?: List1Params,
+ options?: SecondParameter<typeof customInstance<RPagePermissionBaseVO>>,) => {
+      return customInstance<RPagePermissionBaseVO>(
+      {url: `/api/admin/permissions`, method: 'GET',
+        params
+    },
+      options);
     }
-  });
-
-  const stringifiedParams = normalizedParams.toString();
-
-  return stringifiedParams.length > 0 ? `/api/admin/permissions?${stringifiedParams}` : `/api/admin/permissions`
-}
-
-export const list1 = async (params?: List1Params, options?: RequestInit): Promise<list1Response> => {
-  
-  const res = await fetch(getList1Url(params),
-  {      
-    ...options,
-    method: 'GET'
-    
-    
-  }
-)
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-  
-  const data: list1Response['data'] = body ? JSON.parse(body) : {}
-  return { data, status: res.status, headers: res.headers } as list1Response
-}
-  
-
-/**
+  /**
  * 获取单个权限详情
  * @summary 权限详情
  */
-export type getDetail1Response200 = {
-  data: Blob
-  status: 200
-}
-
-export type getDetail1ResponseSuccess = (getDetail1Response200) & {
-  headers: Headers;
-};
-;
-
-export type getDetail1Response = (getDetail1ResponseSuccess)
-
-export const getGetDetail1Url = (id: number,) => {
-
-
-  
-
-  return `/api/admin/permissions/${id}`
-}
-
-export const getDetail1 = async (id: number, options?: RequestInit): Promise<getDetail1Response> => {
-  
-  const res = await fetch(getGetDetail1Url(id),
-  {      
-    ...options,
-    method: 'GET'
-    
-    
-  }
-)
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-  
-  const data: getDetail1Response['data'] = body ? JSON.parse(body) : {}
-  return { data, status: res.status, headers: res.headers } as getDetail1Response
-}
-  
-
-/**
+const getDetail1 = (
+    id: number,
+ options?: SecondParameter<typeof customInstance<RPermissionBaseVO>>,) => {
+      return customInstance<RPermissionBaseVO>(
+      {url: `/api/admin/permissions/${id}`, method: 'GET'
+    },
+      options);
+    }
+  /**
  * 获取所有权限分组（用于角色分配选择）
  * @summary 权限分组列表
  */
-export type getGroupsResponse200 = {
-  data: Blob
-  status: 200
-}
-
-export type getGroupsResponseSuccess = (getGroupsResponse200) & {
-  headers: Headers;
-};
-;
-
-export type getGroupsResponse = (getGroupsResponseSuccess)
-
-export const getGetGroupsUrl = () => {
-
-
-  
-
-  return `/api/admin/permissions/groups`
-}
-
-export const getGroups = async ( options?: RequestInit): Promise<getGroupsResponse> => {
-  
-  const res = await fetch(getGetGroupsUrl(),
-  {      
-    ...options,
-    method: 'GET'
+const getGroups = (
     
-    
-  }
-)
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-  
-  const data: getGroupsResponse['data'] = body ? JSON.parse(body) : {}
-  return { data, status: res.status, headers: res.headers } as getGroupsResponse
-}
-  
-
+ options?: SecondParameter<typeof customInstance<RListPermissionGroupVO>>,) => {
+      return customInstance<RListPermissionGroupVO>(
+      {url: `/api/admin/permissions/groups`, method: 'GET'
+    },
+      options);
+    }
+  return {list1,getDetail1,getGroups}};
+export type List1Result = NonNullable<Awaited<ReturnType<ReturnType<typeof getPermissions>['list1']>>>
+export type GetDetail1Result = NonNullable<Awaited<ReturnType<ReturnType<typeof getPermissions>['getDetail1']>>>
+export type GetGroupsResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getPermissions>['getGroups']>>>

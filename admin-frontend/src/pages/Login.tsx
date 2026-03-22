@@ -4,7 +4,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
-import { getCaptcha, login } from '@/api/generated/auth/auth'
+import { getAuth } from '@/api/generated/auth/auth'
+
+const authApi = getAuth()
+const { getCaptcha, login } = authApi
 import type { CaptchaVO } from '@/api/generated/model'
 import { useAuthStore } from '@/store/auth'
 import { Shield } from 'lucide-react'
@@ -35,10 +38,9 @@ export default function Login() {
 
   const fetchCaptcha = async () => {
     try {
-      const res = await getCaptcha({} as RequestInit)
-      const data = res.data as unknown as { code: number; message: string; data: CaptchaVO }
-      if (data.code === 200) {
-        setCaptcha(data.data)
+      const res = await getCaptcha()
+      if (res.code === 200 && res.data) {
+        setCaptcha(res.data)
       }
     } catch {
       setError('获取验证码失败')
@@ -61,32 +63,20 @@ export default function Login() {
 
     setLoading(true)
     try {
-      const res = await login(
-        {
+      const res = await login({
           username: form.username,
           password: form.password,
           captchaKey: captcha.captchaKey,
           captchaCode: form.captchaCode,
-        },
-        {} as RequestInit
-      )
+        })
 
-      const data = res.data as unknown as {
-        code: number
-        message: string
-        data: {
-          accessToken: string
-          refreshToken: string
-          user: unknown
-        }
-      }
-
-      if (data.code === 200) {
-        setTokens(data.data.accessToken, data.data.refreshToken)
-        setUser(data.data.user as never)
+      if (res.code === 200 && res.data) {
+        const loginData = res.data as { accessToken: string; refreshToken: string; user: unknown }
+        setTokens(loginData.accessToken, loginData.refreshToken)
+        setUser(loginData.user as never)
         navigate('/')
       } else {
-        setError(data.message || '登录失败')
+        setError(res.message || '登录失败')
         fetchCaptcha()
       }
     } catch {

@@ -7,278 +7,105 @@
  */
 import type {
   CreateAdminUserDTO,
-  DeleteBatchParams,
+  DeleteBatch1Params,
   List2Params,
+  RAdminUserVO,
+  RPageAdminUserVO,
+  RVoid,
   UpdateAdminUserDTO
 } from '../model';
 
+import { customInstance } from '../../custom-instance';
+import type { BodyType } from '../../custom-instance';
 
+
+type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
+
+
+  export const getAdminUsers = () => {
 /**
  * 获取单个用户详情
  * @summary 用户详情
  */
-export type getDetail2Response200 = {
-  data: Blob
-  status: 200
-}
-
-export type getDetail2ResponseSuccess = (getDetail2Response200) & {
-  headers: Headers;
-};
-;
-
-export type getDetail2Response = (getDetail2ResponseSuccess)
-
-export const getGetDetail2Url = (id: number,) => {
-
-
-  
-
-  return `/api/admin/admin-users/${id}`
-}
-
-export const getDetail2 = async (id: number, options?: RequestInit): Promise<getDetail2Response> => {
-  
-  const res = await fetch(getGetDetail2Url(id),
-  {      
-    ...options,
-    method: 'GET'
-    
-    
-  }
-)
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-  
-  const data: getDetail2Response['data'] = body ? JSON.parse(body) : {}
-  return { data, status: res.status, headers: res.headers } as getDetail2Response
-}
-  
-
-/**
+const getDetail2 = (
+    id: number,
+ options?: SecondParameter<typeof customInstance<RAdminUserVO>>,) => {
+      return customInstance<RAdminUserVO>(
+      {url: `/api/admin/admin-users/${id}`, method: 'GET'
+    },
+      options);
+    }
+  /**
  * 更新用户信息
  * @summary 更新用户
  */
-export type updateResponse200 = {
-  data: Blob
-  status: 200
-}
-
-export type updateResponseSuccess = (updateResponse200) & {
-  headers: Headers;
-};
-;
-
-export type updateResponse = (updateResponseSuccess)
-
-export const getUpdateUrl = (id: number,) => {
-
-
-  
-
-  return `/api/admin/admin-users/${id}`
-}
-
-export const update = async (id: number,
-    updateAdminUserDTO: UpdateAdminUserDTO, options?: RequestInit): Promise<updateResponse> => {
-  
-  const res = await fetch(getUpdateUrl(id),
-  {      
-    ...options,
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      updateAdminUserDTO,)
-  }
-)
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-  
-  const data: updateResponse['data'] = body ? JSON.parse(body) : {}
-  return { data, status: res.status, headers: res.headers } as updateResponse
-}
-  
-
-/**
+const update1 = (
+    id: number,
+    updateAdminUserDTO: BodyType<UpdateAdminUserDTO>,
+ options?: SecondParameter<typeof customInstance<RAdminUserVO>>,) => {
+      return customInstance<RAdminUserVO>(
+      {url: `/api/admin/admin-users/${id}`, method: 'PUT',
+      headers: {'Content-Type': 'application/json', },
+      data: updateAdminUserDTO
+    },
+      options);
+    }
+  /**
  * 删除单个用户
  * @summary 删除用户
  */
-export type _deleteResponse200 = {
-  data: Blob
-  status: 200
-}
-
-export type _deleteResponseSuccess = (_deleteResponse200) & {
-  headers: Headers;
-};
-;
-
-export type _deleteResponse = (_deleteResponseSuccess)
-
-export const getDeleteUrl = (id: number,) => {
-
-
-  
-
-  return `/api/admin/admin-users/${id}`
-}
-
-export const _delete = async (id: number, options?: RequestInit): Promise<_deleteResponse> => {
-  
-  const res = await fetch(getDeleteUrl(id),
-  {      
-    ...options,
-    method: 'DELETE'
-    
-    
-  }
-)
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-  
-  const data: _deleteResponse['data'] = body ? JSON.parse(body) : {}
-  return { data, status: res.status, headers: res.headers } as _deleteResponse
-}
-  
-
-/**
+const delete1 = (
+    id: number,
+ options?: SecondParameter<typeof customInstance<RVoid>>,) => {
+      return customInstance<RVoid>(
+      {url: `/api/admin/admin-users/${id}`, method: 'DELETE'
+    },
+      options);
+    }
+  /**
  * 分页获取用户列表
  * @summary 用户列表
  */
-export type list2Response200 = {
-  data: Blob
-  status: 200
-}
-
-export type list2ResponseSuccess = (list2Response200) & {
-  headers: Headers;
-};
-;
-
-export type list2Response = (list2ResponseSuccess)
-
-export const getList2Url = (params?: List2Params,) => {
-  const normalizedParams = new URLSearchParams();
-
-  Object.entries(params || {}).forEach(([key, value]) => {
-    
-    if (value !== undefined) {
-      normalizedParams.append(key, value === null ? 'null' : value.toString())
+const list2 = (
+    params?: List2Params,
+ options?: SecondParameter<typeof customInstance<RPageAdminUserVO>>,) => {
+      return customInstance<RPageAdminUserVO>(
+      {url: `/api/admin/admin-users`, method: 'GET',
+        params
+    },
+      options);
     }
-  });
-
-  const stringifiedParams = normalizedParams.toString();
-
-  return stringifiedParams.length > 0 ? `/api/admin/admin-users?${stringifiedParams}` : `/api/admin/admin-users`
-}
-
-export const list2 = async (params?: List2Params, options?: RequestInit): Promise<list2Response> => {
-  
-  const res = await fetch(getList2Url(params),
-  {      
-    ...options,
-    method: 'GET'
-    
-    
-  }
-)
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-  
-  const data: list2Response['data'] = body ? JSON.parse(body) : {}
-  return { data, status: res.status, headers: res.headers } as list2Response
-}
-  
-
-/**
+  /**
  * 创建新用户
  * @summary 创建用户
  */
-export type createResponse200 = {
-  data: Blob
-  status: 200
-}
-
-export type createResponseSuccess = (createResponse200) & {
-  headers: Headers;
-};
-;
-
-export type createResponse = (createResponseSuccess)
-
-export const getCreateUrl = () => {
-
-
-  
-
-  return `/api/admin/admin-users`
-}
-
-export const create = async (createAdminUserDTO: CreateAdminUserDTO, options?: RequestInit): Promise<createResponse> => {
-  
-  const res = await fetch(getCreateUrl(),
-  {      
-    ...options,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      createAdminUserDTO,)
-  }
-)
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-  
-  const data: createResponse['data'] = body ? JSON.parse(body) : {}
-  return { data, status: res.status, headers: res.headers } as createResponse
-}
-  
-
-/**
+const create1 = (
+    createAdminUserDTO: BodyType<CreateAdminUserDTO>,
+ options?: SecondParameter<typeof customInstance<RAdminUserVO>>,) => {
+      return customInstance<RAdminUserVO>(
+      {url: `/api/admin/admin-users`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: createAdminUserDTO
+    },
+      options);
+    }
+  /**
  * 批量删除用户
  * @summary 批量删除用户
  */
-export type deleteBatchResponse200 = {
-  data: Blob
-  status: 200
-}
-
-export type deleteBatchResponseSuccess = (deleteBatchResponse200) & {
-  headers: Headers;
-};
-;
-
-export type deleteBatchResponse = (deleteBatchResponseSuccess)
-
-export const getDeleteBatchUrl = (params: DeleteBatchParams,) => {
-  const normalizedParams = new URLSearchParams();
-
-  Object.entries(params || {}).forEach(([key, value]) => {
-    
-    if (value !== undefined) {
-      normalizedParams.append(key, value === null ? 'null' : value.toString())
+const deleteBatch1 = (
+    params: DeleteBatch1Params,
+ options?: SecondParameter<typeof customInstance<RVoid>>,) => {
+      return customInstance<RVoid>(
+      {url: `/api/admin/admin-users`, method: 'DELETE',
+        params
+    },
+      options);
     }
-  });
-
-  const stringifiedParams = normalizedParams.toString();
-
-  return stringifiedParams.length > 0 ? `/api/admin/admin-users?${stringifiedParams}` : `/api/admin/admin-users`
-}
-
-export const deleteBatch = async (params: DeleteBatchParams, options?: RequestInit): Promise<deleteBatchResponse> => {
-  
-  const res = await fetch(getDeleteBatchUrl(params),
-  {      
-    ...options,
-    method: 'DELETE'
-    
-    
-  }
-)
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-  
-  const data: deleteBatchResponse['data'] = body ? JSON.parse(body) : {}
-  return { data, status: res.status, headers: res.headers } as deleteBatchResponse
-}
-  
-
+  return {getDetail2,update1,delete1,list2,create1,deleteBatch1}};
+export type GetDetail2Result = NonNullable<Awaited<ReturnType<ReturnType<typeof getAdminUsers>['getDetail2']>>>
+export type Update1Result = NonNullable<Awaited<ReturnType<ReturnType<typeof getAdminUsers>['update1']>>>
+export type Delete1Result = NonNullable<Awaited<ReturnType<ReturnType<typeof getAdminUsers>['delete1']>>>
+export type List2Result = NonNullable<Awaited<ReturnType<ReturnType<typeof getAdminUsers>['list2']>>>
+export type Create1Result = NonNullable<Awaited<ReturnType<ReturnType<typeof getAdminUsers>['create1']>>>
+export type DeleteBatch1Result = NonNullable<Awaited<ReturnType<ReturnType<typeof getAdminUsers>['deleteBatch1']>>>

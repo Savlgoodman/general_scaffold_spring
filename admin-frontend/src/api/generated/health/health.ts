@@ -5,46 +5,28 @@
  * 后台管理系统后端 API 文档，前端可通过 OpenAPI Schema 自动生成接口调用代码
  * OpenAPI spec version: 1.0.0
  */
+import type {
+  RString
+} from '../model';
 
+import { customInstance } from '../../custom-instance';
+
+
+type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
+
+
+  export const getHealth = () => {
 /**
  * 返回服务状态和当前时间，用于确认服务是否正常运行
  * @summary 健康检查
  */
-export type healthResponse200 = {
-  data: Blob
-  status: 200
-}
-
-export type healthResponseSuccess = (healthResponse200) & {
-  headers: Headers;
-};
-;
-
-export type healthResponse = (healthResponseSuccess)
-
-export const getHealthUrl = () => {
-
-
-  
-
-  return `/health`
-}
-
-export const health = async ( options?: RequestInit): Promise<healthResponse> => {
-  
-  const res = await fetch(getHealthUrl(),
-  {      
-    ...options,
-    method: 'GET'
+const health = (
     
-    
-  }
-)
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-  
-  const data: healthResponse['data'] = body ? JSON.parse(body) : {}
-  return { data, status: res.status, headers: res.headers } as healthResponse
-}
-  
-
+ options?: SecondParameter<typeof customInstance<RString>>,) => {
+      return customInstance<RString>(
+      {url: `/health`, method: 'GET'
+    },
+      options);
+    }
+  return {health}};
+export type HealthResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getHealth>['health']>>>

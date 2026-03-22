@@ -58,6 +58,7 @@ springdoc:
     path: /swagger-ui.html
     tags-sorter: alpha
     operations-sorter: alpha
+  default-produces-media-type: application/json
 
 jwt:
   secret: ${jwt.secret:your-256-bit-secret-key-change-in-production}

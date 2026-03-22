@@ -35,16 +35,17 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { useToast } from '@/hooks/use-toast'
 import { Plus, Search, Pencil, Trash2, RefreshCw, FolderOpen, FileText } from 'lucide-react'
-import {
-  listPermissions,
-  getPermissionDetail,
-  createPermission,
-  updatePermission,
-  deletePermission,
-} from '@/api/permissions'
+import { getPermissions } from '@/api/generated/permissions/permissions'
 import type {
   PermissionBaseVO,
 } from '@/api/generated/model'
+
+const permissionsApi = getPermissions()
+
+// TODO: 后端权限管理暂无写操作端点，以下为占位
+const createPermission = async (_data: any) => ({ code: 500, message: '后端暂未实现', data: null })
+const updatePermission = async (_id: number, _data: any) => ({ code: 500, message: '后端暂未实现', data: null })
+const deletePermission = async (_id: number) => ({ code: 500, message: '后端暂未实现', data: null })
 
 interface PermissionFormData {
   name: string
@@ -92,13 +93,13 @@ export default function PermissionManagement() {
   const fetchPermissions = useCallback(async () => {
     setLoading(true)
     try {
-      const res = await listPermissions({
+      const res = await permissionsApi.list1({
         pageNum: current,
         pageSize: pageSize,
         keyword: searchKeyword || undefined,
       })
 
-      if (res.code === 200) {
+      if (res.code === 200 && res.data) {
         setPermissions(res.data.records || [])
         setTotal(res.data.total || 0)
         setCurrent(res.data.current || 1)
@@ -129,7 +130,7 @@ export default function PermissionManagement() {
     setDialogOpen(true)
 
     try {
-      const res = await getPermissionDetail(id)
+      const res = await permissionsApi.getDetail1(id)
 
       if (res.code === 200 && res.data) {
         setFormData({

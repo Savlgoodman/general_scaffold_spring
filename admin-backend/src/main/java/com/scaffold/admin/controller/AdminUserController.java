@@ -43,9 +43,9 @@ public class AdminUserController {
         return R.ok(voPage);
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/{id:\\d+}")
     @Operation(summary = "用户详情", description = "获取单个用户详情")
-    public R<AdminUserVO> getDetail(@PathVariable Long id) {
+    public R<AdminUserVO> getDetail(@PathVariable("id") Long id) {
         AdminUser user = adminUserService.getUserById(id);
         if (user == null) {
             return R.error(ResultCode.NOT_FOUND, "用户不存在");
@@ -64,10 +64,10 @@ public class AdminUserController {
         }
     }
 
-    @PutMapping("/{id}")
+    @PutMapping("/{id:\\d+}")
     @Operation(summary = "更新用户", description = "更新用户信息")
     public R<AdminUserVO> update(
-        @PathVariable Long id,
+        @PathVariable("id") Long id,
         @RequestBody @Valid UpdateAdminUserDTO dto
     ) {
         try {
@@ -78,9 +78,9 @@ public class AdminUserController {
         }
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/{id:\\d+}")
     @Operation(summary = "删除用户", description = "删除单个用户")
-    public R<Void> delete(@PathVariable Long id) {
+    public R<Void> delete(@PathVariable("id") Long id) {
         try {
             adminUserService.deleteUser(id);
             return R.ok();

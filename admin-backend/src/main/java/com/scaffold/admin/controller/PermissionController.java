@@ -56,9 +56,9 @@ public class PermissionController {
         return R.ok(voPage);
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/{id:\\d+}")
     @Operation(summary = "权限详情", description = "获取单个权限详情")
-    public R<PermissionBaseVO> getDetail(@PathVariable Long id) {
+    public R<PermissionBaseVO> getDetail(@PathVariable("id") Long id) {
         AdminPermission permission = permissionService.getById(id);
         if (permission == null) {
             return R.error(ResultCode.NOT_FOUND, "权限不存在");

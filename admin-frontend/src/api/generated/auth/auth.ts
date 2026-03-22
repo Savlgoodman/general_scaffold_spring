@@ -7,219 +7,88 @@
  */
 import type {
   LoginDTO,
+  RAdminUserDetails,
+  RCaptchaVO,
+  RLoginVO,
+  RVoid,
   RefreshTokenDTO
 } from '../model';
 
+import { customInstance } from '../../custom-instance';
+import type { BodyType } from '../../custom-instance';
 
+
+type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
+
+
+  export const getAuth = () => {
 /**
  * 使用Refresh Token获取新的Access Token
  * @summary 刷新Token
  */
-export type refreshResponse200 = {
-  data: Blob
-  status: 200
-}
-
-export type refreshResponseSuccess = (refreshResponse200) & {
-  headers: Headers;
-};
-;
-
-export type refreshResponse = (refreshResponseSuccess)
-
-export const getRefreshUrl = () => {
-
-
-  
-
-  return `/api/admin/auth/refresh`
-}
-
-export const refresh = async (refreshTokenDTO: RefreshTokenDTO, options?: RequestInit): Promise<refreshResponse> => {
-  
-  const res = await fetch(getRefreshUrl(),
-  {      
-    ...options,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      refreshTokenDTO,)
-  }
-)
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-  
-  const data: refreshResponse['data'] = body ? JSON.parse(body) : {}
-  return { data, status: res.status, headers: res.headers } as refreshResponse
-}
-  
-
-/**
+const refresh = (
+    refreshTokenDTO: BodyType<RefreshTokenDTO>,
+ options?: SecondParameter<typeof customInstance<RLoginVO>>,) => {
+      return customInstance<RLoginVO>(
+      {url: `/api/admin/auth/refresh`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: refreshTokenDTO
+    },
+      options);
+    }
+  /**
  * 注销当前Token，将Token加入黑名单
  * @summary 用户登出
  */
-export type logoutResponse200 = {
-  data: Blob
-  status: 200
-}
-
-export type logoutResponseSuccess = (logoutResponse200) & {
-  headers: Headers;
-};
-;
-
-export type logoutResponse = (logoutResponseSuccess)
-
-export const getLogoutUrl = () => {
-
-
-  
-
-  return `/api/admin/auth/logout`
-}
-
-export const logout = async ( options?: RequestInit): Promise<logoutResponse> => {
-  
-  const res = await fetch(getLogoutUrl(),
-  {      
-    ...options,
-    method: 'POST'
+const logout = (
     
-    
-  }
-)
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-  
-  const data: logoutResponse['data'] = body ? JSON.parse(body) : {}
-  return { data, status: res.status, headers: res.headers } as logoutResponse
-}
-  
-
-/**
+ options?: SecondParameter<typeof customInstance<RVoid>>,) => {
+      return customInstance<RVoid>(
+      {url: `/api/admin/auth/logout`, method: 'POST'
+    },
+      options);
+    }
+  /**
  * 用户名密码+验证码登录，返回Access Token和Refresh Token
  * @summary 用户登录
  */
-export type loginResponse200 = {
-  data: Blob
-  status: 200
-}
-
-export type loginResponseSuccess = (loginResponse200) & {
-  headers: Headers;
-};
-;
-
-export type loginResponse = (loginResponseSuccess)
-
-export const getLoginUrl = () => {
-
-
-  
-
-  return `/api/admin/auth/login`
-}
-
-export const login = async (loginDTO: LoginDTO, options?: RequestInit): Promise<loginResponse> => {
-  
-  const res = await fetch(getLoginUrl(),
-  {      
-    ...options,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      loginDTO,)
-  }
-)
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-  
-  const data: loginResponse['data'] = body ? JSON.parse(body) : {}
-  return { data, status: res.status, headers: res.headers } as loginResponse
-}
-  
-
-/**
+const login = (
+    loginDTO: BodyType<LoginDTO>,
+ options?: SecondParameter<typeof customInstance<RLoginVO>>,) => {
+      return customInstance<RLoginVO>(
+      {url: `/api/admin/auth/login`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: loginDTO
+    },
+      options);
+    }
+  /**
  * 获取当前登录用户的信息
  * @summary 获取当前用户信息
  */
-export type getCurrentUserResponse200 = {
-  data: Blob
-  status: 200
-}
-
-export type getCurrentUserResponseSuccess = (getCurrentUserResponse200) & {
-  headers: Headers;
-};
-;
-
-export type getCurrentUserResponse = (getCurrentUserResponseSuccess)
-
-export const getGetCurrentUserUrl = () => {
-
-
-  
-
-  return `/api/admin/auth/me`
-}
-
-export const getCurrentUser = async ( options?: RequestInit): Promise<getCurrentUserResponse> => {
-  
-  const res = await fetch(getGetCurrentUserUrl(),
-  {      
-    ...options,
-    method: 'GET'
+const getCurrentUser = (
     
-    
-  }
-)
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-  
-  const data: getCurrentUserResponse['data'] = body ? JSON.parse(body) : {}
-  return { data, status: res.status, headers: res.headers } as getCurrentUserResponse
-}
-  
-
-/**
+ options?: SecondParameter<typeof customInstance<RAdminUserDetails>>,) => {
+      return customInstance<RAdminUserDetails>(
+      {url: `/api/admin/auth/me`, method: 'GET'
+    },
+      options);
+    }
+  /**
  * 生成并返回验证码图片Base64和key
  * @summary 获取图形验证码
  */
-export type getCaptchaResponse200 = {
-  data: Blob
-  status: 200
-}
-
-export type getCaptchaResponseSuccess = (getCaptchaResponse200) & {
-  headers: Headers;
-};
-;
-
-export type getCaptchaResponse = (getCaptchaResponseSuccess)
-
-export const getGetCaptchaUrl = () => {
-
-
-  
-
-  return `/api/admin/auth/captcha`
-}
-
-export const getCaptcha = async ( options?: RequestInit): Promise<getCaptchaResponse> => {
-  
-  const res = await fetch(getGetCaptchaUrl(),
-  {      
-    ...options,
-    method: 'GET'
+const getCaptcha = (
     
-    
-  }
-)
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-  
-  const data: getCaptchaResponse['data'] = body ? JSON.parse(body) : {}
-  return { data, status: res.status, headers: res.headers } as getCaptchaResponse
-}
-  
-
+ options?: SecondParameter<typeof customInstance<RCaptchaVO>>,) => {
+      return customInstance<RCaptchaVO>(
+      {url: `/api/admin/auth/captcha`, method: 'GET'
+    },
+      options);
+    }
+  return {refresh,logout,login,getCurrentUser,getCaptcha}};
+export type RefreshResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAuth>['refresh']>>>
+export type LogoutResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAuth>['logout']>>>
+export type LoginResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAuth>['login']>>>
+export type GetCurrentUserResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAuth>['getCurrentUser']>>>
+export type GetCaptchaResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAuth>['getCaptcha']>>>

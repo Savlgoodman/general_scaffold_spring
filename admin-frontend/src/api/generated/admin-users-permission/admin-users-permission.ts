@@ -7,435 +7,119 @@
  */
 import type {
   AssignRolesDTO,
-  UserPermissionOverrideDTO
+  RListRoleBaseVO,
+  RUserPermissionOverviewVO,
+  RVoid,
+  SyncUserOverridesDTO
 } from '../model';
 
+import { customInstance } from '../../custom-instance';
+import type { BodyType } from '../../custom-instance';
 
+
+type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
+
+
+  export const getAdminUsersPermission = () => {
 /**
- * 获取用户的角色列表
- * @summary 获取用户角色
+ * 同步用户权限覆盖（对比差异，批量增删改）
+ * @summary 同步用户权限覆盖
  */
-export type getUserRolesResponse200 = {
-  data: Blob
-  status: 200
-}
-
-export type getUserRolesResponseSuccess = (getUserRolesResponse200) & {
-  headers: Headers;
-};
-;
-
-export type getUserRolesResponse = (getUserRolesResponseSuccess)
-
-export const getGetUserRolesUrl = (id: number,) => {
-
-
-  
-
-  return `/api/admin/admin-users/${id}/roles`
-}
-
-export const getUserRoles = async (id: number, options?: RequestInit): Promise<getUserRolesResponse> => {
-  
-  const res = await fetch(getGetUserRolesUrl(id),
-  {      
-    ...options,
-    method: 'GET'
-    
-    
-  }
-)
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-  
-  const data: getUserRolesResponse['data'] = body ? JSON.parse(body) : {}
-  return { data, status: res.status, headers: res.headers } as getUserRolesResponse
-}
-  
-
-/**
- * 分配角色给用户
- * @summary 分配用户角色
- */
-export type assignUserRolesResponse200 = {
-  data: Blob
-  status: 200
-}
-
-export type assignUserRolesResponseSuccess = (assignUserRolesResponse200) & {
-  headers: Headers;
-};
-;
-
-export type assignUserRolesResponse = (assignUserRolesResponseSuccess)
-
-export const getAssignUserRolesUrl = (id: number,) => {
-
-
-  
-
-  return `/api/admin/admin-users/${id}/roles`
-}
-
-export const assignUserRoles = async (id: number,
-    assignRolesDTO: AssignRolesDTO, options?: RequestInit): Promise<assignUserRolesResponse> => {
-  
-  const res = await fetch(getAssignUserRolesUrl(id),
-  {      
-    ...options,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      assignRolesDTO,)
-  }
-)
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-  
-  const data: assignUserRolesResponse['data'] = body ? JSON.parse(body) : {}
-  return { data, status: res.status, headers: res.headers } as assignUserRolesResponse
-}
-  
-
-/**
- * 批量撤销用户角色
- * @summary 批量撤销用户角色
- */
-export type revokeUserRolesResponse200 = {
-  data: Blob
-  status: 200
-}
-
-export type revokeUserRolesResponseSuccess = (revokeUserRolesResponse200) & {
-  headers: Headers;
-};
-;
-
-export type revokeUserRolesResponse = (revokeUserRolesResponseSuccess)
-
-export const getRevokeUserRolesUrl = (id: number,) => {
-
-
-  
-
-  return `/api/admin/admin-users/${id}/roles`
-}
-
-export const revokeUserRoles = async (id: number,
-    assignRolesDTO: AssignRolesDTO, options?: RequestInit): Promise<revokeUserRolesResponse> => {
-  
-  const res = await fetch(getRevokeUserRolesUrl(id),
-  {      
-    ...options,
-    method: 'DELETE',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      assignRolesDTO,)
-  }
-)
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-  
-  const data: revokeUserRolesResponse['data'] = body ? JSON.parse(body) : {}
-  return { data, status: res.status, headers: res.headers } as revokeUserRolesResponse
-}
-  
-
-/**
- * 获取用户权限覆盖列表
- * @summary 获取用户权限覆盖列表
- */
-export type getUserPermissionOverridesResponse200 = {
-  data: Blob
-  status: 200
-}
-
-export type getUserPermissionOverridesResponseSuccess = (getUserPermissionOverridesResponse200) & {
-  headers: Headers;
-};
-;
-
-export type getUserPermissionOverridesResponse = (getUserPermissionOverridesResponseSuccess)
-
-export const getGetUserPermissionOverridesUrl = (id: number,) => {
-
-
-  
-
-  return `/api/admin/admin-users/${id}/permission-overrides`
-}
-
-export const getUserPermissionOverrides = async (id: number, options?: RequestInit): Promise<getUserPermissionOverridesResponse> => {
-  
-  const res = await fetch(getGetUserPermissionOverridesUrl(id),
-  {      
-    ...options,
-    method: 'GET'
-    
-    
-  }
-)
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-  
-  const data: getUserPermissionOverridesResponse['data'] = body ? JSON.parse(body) : {}
-  return { data, status: res.status, headers: res.headers } as getUserPermissionOverridesResponse
-}
-  
-
-/**
- * 设置用户权限覆盖
- * @summary 设置用户权限覆盖
- */
-export type setUserPermissionOverrideResponse200 = {
-  data: Blob
-  status: 200
-}
-
-export type setUserPermissionOverrideResponseSuccess = (setUserPermissionOverrideResponse200) & {
-  headers: Headers;
-};
-;
-
-export type setUserPermissionOverrideResponse = (setUserPermissionOverrideResponseSuccess)
-
-export const getSetUserPermissionOverrideUrl = (id: number,) => {
-
-
-  
-
-  return `/api/admin/admin-users/${id}/permission-overrides`
-}
-
-export const setUserPermissionOverride = async (id: number,
-    userPermissionOverrideDTO: UserPermissionOverrideDTO, options?: RequestInit): Promise<setUserPermissionOverrideResponse> => {
-  
-  const res = await fetch(getSetUserPermissionOverrideUrl(id),
-  {      
-    ...options,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      userPermissionOverrideDTO,)
-  }
-)
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-  
-  const data: setUserPermissionOverrideResponse['data'] = body ? JSON.parse(body) : {}
-  return { data, status: res.status, headers: res.headers } as setUserPermissionOverrideResponse
-}
-  
-
-/**
+const syncUserOverrides = (
+    id: number,
+    syncUserOverridesDTO: BodyType<SyncUserOverridesDTO>,
+ options?: SecondParameter<typeof customInstance<RVoid>>,) => {
+      return customInstance<RVoid>(
+      {url: `/api/admin/admin-users/${id}/permission-overrides`, method: 'PUT',
+      headers: {'Content-Type': 'application/json', },
+      data: syncUserOverridesDTO
+    },
+      options);
+    }
+  /**
  * 清除用户所有权限覆盖
  * @summary 清除用户所有权限覆盖
  */
-export type clearUserPermissionOverridesResponse200 = {
-  data: Blob
-  status: 200
-}
-
-export type clearUserPermissionOverridesResponseSuccess = (clearUserPermissionOverridesResponse200) & {
-  headers: Headers;
-};
-;
-
-export type clearUserPermissionOverridesResponse = (clearUserPermissionOverridesResponseSuccess)
-
-export const getClearUserPermissionOverridesUrl = (id: number,) => {
-
-
-  
-
-  return `/api/admin/admin-users/${id}/permission-overrides`
-}
-
-export const clearUserPermissionOverrides = async (id: number, options?: RequestInit): Promise<clearUserPermissionOverridesResponse> => {
-  
-  const res = await fetch(getClearUserPermissionOverridesUrl(id),
-  {      
-    ...options,
-    method: 'DELETE'
-    
-    
-  }
-)
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-  
-  const data: clearUserPermissionOverridesResponse['data'] = body ? JSON.parse(body) : {}
-  return { data, status: res.status, headers: res.headers } as clearUserPermissionOverridesResponse
-}
-  
-
-/**
- * 获取用户已有效权限（含来源）
- * @summary 获取用户有效权限
+const clearUserPermissionOverrides = (
+    id: number,
+ options?: SecondParameter<typeof customInstance<RVoid>>,) => {
+      return customInstance<RVoid>(
+      {url: `/api/admin/admin-users/${id}/permission-overrides`, method: 'DELETE'
+    },
+      options);
+    }
+  /**
+ * 获取用户的角色列表
+ * @summary 获取用户角色
  */
-export type getUserPermissionsResponse200 = {
-  data: Blob
-  status: 200
-}
-
-export type getUserPermissionsResponseSuccess = (getUserPermissionsResponse200) & {
-  headers: Headers;
-};
-;
-
-export type getUserPermissionsResponse = (getUserPermissionsResponseSuccess)
-
-export const getGetUserPermissionsUrl = (id: number,) => {
-
-
-  
-
-  return `/api/admin/admin-users/${id}/permissions`
-}
-
-export const getUserPermissions = async (id: number, options?: RequestInit): Promise<getUserPermissionsResponse> => {
-  
-  const res = await fetch(getGetUserPermissionsUrl(id),
-  {      
-    ...options,
-    method: 'GET'
-    
-    
-  }
-)
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-  
-  const data: getUserPermissionsResponse['data'] = body ? JSON.parse(body) : {}
-  return { data, status: res.status, headers: res.headers } as getUserPermissionsResponse
-}
-  
-
-/**
- * 获取用户最终有效权限（已计算最终决策）
- * @summary 获取用户最终有效权限
+const getUserRoles = (
+    id: number,
+ options?: SecondParameter<typeof customInstance<RListRoleBaseVO>>,) => {
+      return customInstance<RListRoleBaseVO>(
+      {url: `/api/admin/admin-users/${id}/roles`, method: 'GET'
+    },
+      options);
+    }
+  /**
+ * 分配角色给用户
+ * @summary 分配用户角色
  */
-export type getUserEffectivePermissionsResponse200 = {
-  data: Blob
-  status: 200
-}
-
-export type getUserEffectivePermissionsResponseSuccess = (getUserEffectivePermissionsResponse200) & {
-  headers: Headers;
-};
-;
-
-export type getUserEffectivePermissionsResponse = (getUserEffectivePermissionsResponseSuccess)
-
-export const getGetUserEffectivePermissionsUrl = (id: number,) => {
-
-
-  
-
-  return `/api/admin/admin-users/${id}/permissions/effective`
-}
-
-export const getUserEffectivePermissions = async (id: number, options?: RequestInit): Promise<getUserEffectivePermissionsResponse> => {
-  
-  const res = await fetch(getGetUserEffectivePermissionsUrl(id),
-  {      
-    ...options,
-    method: 'GET'
-    
-    
-  }
-)
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-  
-  const data: getUserEffectivePermissionsResponse['data'] = body ? JSON.parse(body) : {}
-  return { data, status: res.status, headers: res.headers } as getUserEffectivePermissionsResponse
-}
-  
-
-/**
- * 获取用户未拥有的权限（用于添加覆盖）
- * @summary 获取用户可用权限
+const assignUserRoles = (
+    id: number,
+    assignRolesDTO: BodyType<AssignRolesDTO>,
+ options?: SecondParameter<typeof customInstance<RVoid>>,) => {
+      return customInstance<RVoid>(
+      {url: `/api/admin/admin-users/${id}/roles`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: assignRolesDTO
+    },
+      options);
+    }
+  /**
+ * 批量撤销用户角色
+ * @summary 批量撤销用户角色
  */
-export type getUserAvailablePermissionsResponse200 = {
-  data: Blob
-  status: 200
-}
-
-export type getUserAvailablePermissionsResponseSuccess = (getUserAvailablePermissionsResponse200) & {
-  headers: Headers;
-};
-;
-
-export type getUserAvailablePermissionsResponse = (getUserAvailablePermissionsResponseSuccess)
-
-export const getGetUserAvailablePermissionsUrl = (id: number,) => {
-
-
-  
-
-  return `/api/admin/admin-users/${id}/permissions/available`
-}
-
-export const getUserAvailablePermissions = async (id: number, options?: RequestInit): Promise<getUserAvailablePermissionsResponse> => {
-  
-  const res = await fetch(getGetUserAvailablePermissionsUrl(id),
-  {      
-    ...options,
-    method: 'GET'
-    
-    
-  }
-)
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-  
-  const data: getUserAvailablePermissionsResponse['data'] = body ? JSON.parse(body) : {}
-  return { data, status: res.status, headers: res.headers } as getUserAvailablePermissionsResponse
-}
-  
-
-/**
+const revokeUserRoles = (
+    id: number,
+    assignRolesDTO: BodyType<AssignRolesDTO>,
+ options?: SecondParameter<typeof customInstance<RVoid>>,) => {
+      return customInstance<RVoid>(
+      {url: `/api/admin/admin-users/${id}/roles`, method: 'DELETE',
+      headers: {'Content-Type': 'application/json', },
+      data: assignRolesDTO
+    },
+      options);
+    }
+  /**
+ * 获取用户所有权限的完整视图（含来源、覆盖状态、操作ID）
+ * @summary 用户权限总览
+ */
+const getUserPermissions = (
+    id: number,
+ options?: SecondParameter<typeof customInstance<RUserPermissionOverviewVO>>,) => {
+      return customInstance<RUserPermissionOverviewVO>(
+      {url: `/api/admin/admin-users/${id}/permissions`, method: 'GET'
+    },
+      options);
+    }
+  /**
  * 删除单个权限覆盖
  * @summary 删除用户权限覆盖
  */
-export type removeUserPermissionOverrideResponse200 = {
-  data: Blob
-  status: 200
-}
-
-export type removeUserPermissionOverrideResponseSuccess = (removeUserPermissionOverrideResponse200) & {
-  headers: Headers;
-};
-;
-
-export type removeUserPermissionOverrideResponse = (removeUserPermissionOverrideResponseSuccess)
-
-export const getRemoveUserPermissionOverrideUrl = (id: number,
-    overrideId: number,) => {
-
-
-  
-
-  return `/api/admin/admin-users/${id}/permission-overrides/${overrideId}`
-}
-
-export const removeUserPermissionOverride = async (id: number,
-    overrideId: number, options?: RequestInit): Promise<removeUserPermissionOverrideResponse> => {
-  
-  const res = await fetch(getRemoveUserPermissionOverrideUrl(id,overrideId),
-  {      
-    ...options,
-    method: 'DELETE'
-    
-    
-  }
-)
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-  
-  const data: removeUserPermissionOverrideResponse['data'] = body ? JSON.parse(body) : {}
-  return { data, status: res.status, headers: res.headers } as removeUserPermissionOverrideResponse
-}
-  
-
+const removeUserPermissionOverride = (
+    id: number,
+    overrideId: number,
+ options?: SecondParameter<typeof customInstance<RVoid>>,) => {
+      return customInstance<RVoid>(
+      {url: `/api/admin/admin-users/${id}/permission-overrides/${overrideId}`, method: 'DELETE'
+    },
+      options);
+    }
+  return {syncUserOverrides,clearUserPermissionOverrides,getUserRoles,assignUserRoles,revokeUserRoles,getUserPermissions,removeUserPermissionOverride}};
+export type SyncUserOverridesResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAdminUsersPermission>['syncUserOverrides']>>>
+export type ClearUserPermissionOverridesResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAdminUsersPermission>['clearUserPermissionOverrides']>>>
+export type GetUserRolesResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAdminUsersPermission>['getUserRoles']>>>
+export type AssignUserRolesResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAdminUsersPermission>['assignUserRoles']>>>
+export type RevokeUserRolesResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAdminUsersPermission>['revokeUserRoles']>>>
+export type GetUserPermissionsResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAdminUsersPermission>['getUserPermissions']>>>
+export type RemoveUserPermissionOverrideResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAdminUsersPermission>['removeUserPermissionOverride']>>>

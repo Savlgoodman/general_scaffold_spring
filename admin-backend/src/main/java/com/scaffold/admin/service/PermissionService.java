@@ -28,4 +28,17 @@ public interface PermissionService {
     List<PermissionGroupVO> getAllGroupedPermissions();
 
     PermissionBaseVO convertToBaseVO(AdminPermission permission);
+
+    /**
+     * 计算权限的具体程度
+     * @return specificity: 精确匹配>单通配符>双通配符, 子权限>组权限
+     */
+    int calculateSpecificity(AdminPermission permission, String requestPath, String requestMethod);
+
+    /**
+     * 计算路径的具体程度
+     * @return specificity值
+     */
+    int calculatePathSpecificity(String pattern, String path);
+
 }
