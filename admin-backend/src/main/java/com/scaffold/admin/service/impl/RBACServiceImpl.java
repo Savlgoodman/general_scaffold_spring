@@ -1,7 +1,6 @@
 package com.scaffold.admin.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.scaffold.admin.mapper.*;
 import com.scaffold.admin.model.dto.SyncRolePermissionsDTO;
 import com.scaffold.admin.model.dto.SyncUserOverridesDTO;
@@ -100,26 +99,20 @@ public class RBACServiceImpl implements RBACService {
     @Transactional
     public void removeUserRoles(Long userId, List<Long> roleIds) {
         if (roleIds == null || roleIds.isEmpty()) return;
-        userRoleMapper.update(
-            new AdminUserRole(),
-            new LambdaUpdateWrapper<AdminUserRole>()
+        userRoleMapper.delete(
+            new LambdaQueryWrapper<AdminUserRole>()
                 .eq(AdminUserRole::getUserId, userId)
                 .in(AdminUserRole::getRoleId, roleIds)
-                .eq(AdminUserRole::getIsDeleted, 0)
-                .set(AdminUserRole::getIsDeleted, 1)
         );
     }
 
     @Override
     @Transactional
     public void syncUserRoles(Long userId, List<Long> roleIds) {
-        // 软删除所有现有关联
-        userRoleMapper.update(
-            new AdminUserRole(),
-            new LambdaUpdateWrapper<AdminUserRole>()
+        // 删除所有现有关联（@TableLogic 自动转为逻辑删除）
+        userRoleMapper.delete(
+            new LambdaQueryWrapper<AdminUserRole>()
                 .eq(AdminUserRole::getUserId, userId)
-                .eq(AdminUserRole::getIsDeleted, 0)
-                .set(AdminUserRole::getIsDeleted, 1)
         );
 
         if (roleIds != null && !roleIds.isEmpty()) {
@@ -280,32 +273,15 @@ public class RBACServiceImpl implements RBACService {
             .collect(Collectors.toSet());
 
         if (!toRemove.isEmpty()) {
-            rolePermissionMapper.update(
-                new AdminRolePermission(),
-                new LambdaUpdateWrapper<AdminRolePermission>()
+            rolePermissionMapper.delete(
+                new LambdaQueryWrapper<AdminRolePermission>()
                     .eq(AdminRolePermission::getRoleId, roleId)
                     .in(AdminRolePermission::getPermissionId, toRemove)
-                    .eq(AdminRolePermission::getIsDeleted, 0)
-                    .set(AdminRolePermission::getIsDeleted, 1)
             );
         }
     }
 
-    @Override
-    @Transactional
-    public void revokeRolePermissions(Long roleId, List<Long> permissionIds) {
-        if (permissionIds == null || permissionIds.isEmpty()) return;
-        rolePermissionMapper.update(
-            new AdminRolePermission(),
-            new LambdaUpdateWrapper<AdminRolePermission>()
-                .eq(AdminRolePermission::getRoleId, roleId)
-                .in(AdminRolePermission::getPermissionId, permissionIds)
-                .eq(AdminRolePermission::getIsDeleted, 0)
-                .set(AdminRolePermission::getIsDeleted, 1)
-        );
-    }
-
-    // ==================== 用户权限总览 ====================
+// ==================== 用户权限总览 ====================
 
     @Override
     public UserPermissionOverviewVO getUserPermissionOverview(Long userId) {
@@ -621,13 +597,10 @@ public class RBACServiceImpl implements RBACService {
             .collect(Collectors.toSet());
 
         if (!toRemove.isEmpty()) {
-            overrideMapper.update(
-                new AdminUserPermissionOverride(),
-                new LambdaUpdateWrapper<AdminUserPermissionOverride>()
+            overrideMapper.delete(
+                new LambdaQueryWrapper<AdminUserPermissionOverride>()
                     .eq(AdminUserPermissionOverride::getUserId, userId)
                     .in(AdminUserPermissionOverride::getPermissionId, toRemove)
-                    .eq(AdminUserPermissionOverride::getIsDeleted, 0)
-                    .set(AdminUserPermissionOverride::getIsDeleted, 1)
             );
         }
     }

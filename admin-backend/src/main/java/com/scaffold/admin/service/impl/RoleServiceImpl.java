@@ -1,7 +1,6 @@
 package com.scaffold.admin.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.scaffold.admin.mapper.AdminRoleMapper;
 import com.scaffold.admin.model.dto.CreateRoleDTO;
 import com.scaffold.admin.model.dto.UpdateRoleDTO;
@@ -94,20 +93,14 @@ public class RoleServiceImpl implements RoleService {
         if (role == null) {
             throw new IllegalArgumentException("角色不存在: " + id);
         }
-        role.setIsDeleted(1);
-        roleMapper.updateById(role);
+        roleMapper.deleteById(id);
     }
 
     @Override
     @Transactional
     public void deleteRoles(List<Long> ids) {
         if (ids == null || ids.isEmpty()) return;
-        roleMapper.update(
-            new AdminRole(),
-            new LambdaUpdateWrapper<AdminRole>()
-                .in(AdminRole::getId, ids)
-                .set(AdminRole::getIsDeleted, 1)
-        );
+        roleMapper.deleteBatchIds(ids);
     }
 
     @Override

@@ -1,7 +1,6 @@
 package com.scaffold.admin.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.scaffold.admin.mapper.AdminUserMapper;
 import com.scaffold.admin.model.dto.CreateAdminUserDTO;
@@ -143,9 +142,7 @@ public class AdminUserServiceImpl implements AdminUserService {
         if (user == null) {
             throw new IllegalArgumentException("用户不存在: " + id);
         }
-
-        user.setIsDeleted(1);
-        adminUserMapper.updateById(user);
+        adminUserMapper.deleteById(id);
     }
 
     @Override
@@ -154,13 +151,7 @@ public class AdminUserServiceImpl implements AdminUserService {
         if (ids == null || ids.isEmpty()) {
             return;
         }
-
-        adminUserMapper.update(
-            new AdminUser(),
-            new LambdaUpdateWrapper<AdminUser>()
-                .in(AdminUser::getId, ids)
-                .set(AdminUser::getIsDeleted, 1)
-        );
+        adminUserMapper.deleteBatchIds(ids);
     }
 
     @Override
