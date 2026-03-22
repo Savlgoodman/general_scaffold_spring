@@ -61,8 +61,8 @@ const getUserRoles = (
       options);
     }
   /**
- * 分配角色给用户
- * @summary 分配用户角色
+ * 同步用户角色（全量替换，传入的为最终角色列表）
+ * @summary 同步用户角色
  */
 const assignUserRoles = (
     id: number,

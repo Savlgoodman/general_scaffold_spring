@@ -81,6 +81,9 @@ public class UserPermissionOverviewVO {
 
         @Schema(description = "覆盖的效果: GRANT/DENY")
         private String overrideEffect;
+
+        @Schema(description = "是否被组权限覆盖")
+        private boolean coveredByGroup;
     }
 
     @Schema(description = "覆盖记录")

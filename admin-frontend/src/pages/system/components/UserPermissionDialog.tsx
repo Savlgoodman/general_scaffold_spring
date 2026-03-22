@@ -105,7 +105,12 @@ export default function UserPermissionDialog({ open, onOpenChange, userId, usern
     if (row.source === 'SUPER_USER') return <Badge className="bg-purple-500 text-xs">超管</Badge>
     if (row.source === 'OVERRIDE') return <Badge variant="destructive" className="text-xs">覆盖: {row.overrideEffect}</Badge>
     if (row.source === 'ROLE' && row.sourceRoles && row.sourceRoles.length > 0) {
-      return <Badge variant="secondary" className="text-xs">角色: {row.sourceRoles.join(', ')}</Badge>
+      return (
+        <div className="flex items-center gap-1">
+          <Badge variant="secondary" className="text-xs">角色: {row.sourceRoles.join(', ')}</Badge>
+          {row.coveredByGroup && <Badge variant="outline" className="text-xs text-emerald-600 border-emerald-300">组覆盖</Badge>}
+        </div>
+      )
     }
     return <Badge variant="outline" className="text-xs">未分配</Badge>
   }

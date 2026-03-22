@@ -388,7 +388,10 @@ public class RBACServiceImpl implements RBACService {
 
             List<UserPermissionOverviewVO.PermissionRow> children = new ArrayList<>();
 
-            // 添加组权限本身
+            // 先计算组权限是否被 GRANT（用于判断子权限是否被组覆盖）
+            boolean groupIsGranted = false;
+            List<String> groupSourceRoles = Collections.emptyList();
+
             if (group.getGroupPermission() != null) {
                 PermissionBaseVO gp = group.getGroupPermission();
                 UserPermissionOverviewVO.PermissionRow row = buildPermissionRow(
@@ -396,6 +399,9 @@ public class RBACServiceImpl implements RBACService {
                     permToRoles, overrideMap
                 );
                 children.add(row);
+
+                groupIsGranted = "GRANT".equals(row.getFinalEffect());
+                groupSourceRoles = row.getSourceRoles();
 
                 if ("GRANT".equals(row.getFinalEffect())) grantedCount++;
                 else if ("DENY".equals(row.getFinalEffect())) deniedCount++;
@@ -406,12 +412,21 @@ public class RBACServiceImpl implements RBACService {
                 }
             }
 
-            // 添加子权限
+            // 添加子权限（如果组权限已 GRANT，子权限标记为被组覆盖）
             for (PermissionBaseVO child : group.getChildren()) {
                 UserPermissionOverviewVO.PermissionRow row = buildPermissionRow(
                     child.getId(), child.getName(), child.getPath(), child.getMethod(), false,
                     permToRoles, overrideMap
                 );
+
+                // 组权限已 GRANT 且子权限没有直接分配也没有覆盖 → 被组覆盖
+                if (groupIsGranted && "NONE".equals(row.getSource())) {
+                    row.setFinalEffect("GRANT");
+                    row.setSource("ROLE");
+                    row.setSourceRoles(groupSourceRoles);
+                    row.setCoveredByGroup(true);
+                }
+
                 children.add(row);
 
                 if ("GRANT".equals(row.getFinalEffect())) grantedCount++;

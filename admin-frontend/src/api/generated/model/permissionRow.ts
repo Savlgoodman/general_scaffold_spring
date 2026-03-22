@@ -30,5 +30,7 @@ export interface PermissionRow {
   overrideId?: number;
   /** 覆盖的效果: GRANT/DENY */
   overrideEffect?: string;
+  /** 是否被组权限覆盖 */
+  coveredByGroup?: boolean;
   group?: boolean;
 }
