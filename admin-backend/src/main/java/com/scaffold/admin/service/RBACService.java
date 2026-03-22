@@ -39,12 +39,7 @@ public interface RBACService {
      */
     void syncRolePermissions(Long roleId, SyncRolePermissionsDTO dto);
 
-    /**
-     * 撤销角色的指定权限
-     */
-    void revokeRolePermissions(Long roleId, List<Long> permissionIds);
-
-    // ==================== 用户权限覆盖 ====================
+// ==================== 用户权限覆盖 ====================
 
     /**
      * 获取用户权限总览（所有权限+来源+覆盖状态，一次调用包含所有信息）

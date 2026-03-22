@@ -6,7 +6,6 @@ import com.scaffold.admin.common.R;
 import com.scaffold.admin.common.ResultCode;
 import com.scaffold.admin.mapper.AdminRoleMapper;
 import com.scaffold.admin.model.dto.CreateRoleDTO;
-import com.scaffold.admin.model.dto.RevokePermissionsDTO;
 import com.scaffold.admin.model.dto.SyncRolePermissionsDTO;
 import com.scaffold.admin.model.dto.UpdateRoleDTO;
 import com.scaffold.admin.model.entity.AdminRole;
@@ -33,7 +32,7 @@ public class RoleController {
     private final AdminRoleMapper roleMapper;
 
     @GetMapping
-    @Operation(summary = "角色列表", description = "分页获取角色列表")
+    @Operation(operationId = "listRoles", summary = "角色列表", description = "分页获取角色列表")
     public R<Page<RoleBaseVO>> list(
         @RequestParam(defaultValue = "1") Integer pageNum,
         @RequestParam(defaultValue = "10") Integer pageSize,
@@ -64,7 +63,7 @@ public class RoleController {
     }
 
     @GetMapping("/{id:\\d+}")
-    @Operation(summary = "角色详情", description = "获取角色详情")
+    @Operation(operationId = "getRoleDetail", summary = "角色详情", description = "获取角色详情")
     public R<RoleBaseVO> getDetail(@PathVariable("id") Long id) {
         AdminRole role = roleMapper.selectById(id);
         if (role == null) {
@@ -74,7 +73,7 @@ public class RoleController {
     }
 
     @PostMapping
-    @Operation(summary = "创建角色", description = "创建新角色")
+    @Operation(operationId = "createRole", summary = "创建角色", description = "创建新角色")
     public R<RoleBaseVO> create(@RequestBody @Valid CreateRoleDTO dto) {
         try {
             AdminRole role = roleService.createRole(dto);
@@ -85,7 +84,7 @@ public class RoleController {
     }
 
     @PutMapping("/{id:\\d+}")
-    @Operation(summary = "更新角色", description = "更新角色信息")
+    @Operation(operationId = "updateRole", summary = "更新角色", description = "更新角色信息")
     public R<RoleBaseVO> update(
         @PathVariable("id") Long id,
         @RequestBody @Valid UpdateRoleDTO dto
@@ -99,7 +98,7 @@ public class RoleController {
     }
 
     @DeleteMapping("/{id:\\d+}")
-    @Operation(summary = "删除角色", description = "删除单个角色")
+    @Operation(operationId = "deleteRole", summary = "删除角色", description = "删除单个角色")
     public R<Void> delete(@PathVariable("id") Long id) {
         try {
             roleService.deleteRole(id);
@@ -110,7 +109,7 @@ public class RoleController {
     }
 
     @DeleteMapping
-    @Operation(summary = "批量删除角色", description = "批量删除角色")
+    @Operation(operationId = "deleteRolesBatch", summary = "批量删除角色", description = "批量删除角色")
     public R<Void> deleteBatch(@RequestParam List<Long> ids) {
         if (ids == null || ids.isEmpty()) {
             return R.error(ResultCode.PARAM_ERROR, "角色ID列表不能为空");
@@ -120,7 +119,7 @@ public class RoleController {
     }
 
     @GetMapping("/{id:\\d+}/permissions")
-    @Operation(summary = "角色权限完整视图", description = "获取角色所有权限���分配状态（含组覆盖标记）")
+    @Operation(operationId = "getRolePermissions", summary = "角色权限完整视图", description = "获取角色所有权限及分配状态（含组覆盖标记）")
     public R<RolePermissionFullVO> getPermissions(@PathVariable("id") Long id) {
         RolePermissionFullVO permissions = rbacService.getRolePermissionsFull(id);
         if (permissions == null) {
@@ -130,22 +129,12 @@ public class RoleController {
     }
 
     @PutMapping("/{id:\\d+}/permissions")
-    @Operation(summary = "同步角色权限", description = "原子同步角色权限（对比差异，批量增删改）")
+    @Operation(operationId = "syncRolePermissions", summary = "同步角色权限", description = "原子同步角色权限（对比差异，批量增删改）")
     public R<Void> syncPermissions(
         @PathVariable("id") Long id,
         @RequestBody @Valid SyncRolePermissionsDTO dto
     ) {
         rbacService.syncRolePermissions(id, dto);
-        return R.ok();
-    }
-
-    @DeleteMapping("/{id:\\d+}/permissions")
-    @Operation(summary = "批量撤销角色权限", description = "批量撤销角色权限")
-    public R<Void> revokePermissions(
-        @PathVariable("id") Long id,
-        @RequestBody @Valid RevokePermissionsDTO dto
-    ) {
-        rbacService.revokeRolePermissions(id, dto.getPermissionIds());
         return R.ok();
     }
 

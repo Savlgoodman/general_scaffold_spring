@@ -29,7 +29,7 @@ public class AuthController {
      * 获取图形验证码
      */
     @GetMapping("/captcha")
-    @Operation(summary = "获取图形验证码", description = "生成并返回验证码图片Base64和key")
+    @Operation(operationId = "getCaptcha", summary = "获取图形验证码", description = "生成并返回验证码图片Base64和key")
     public R<CaptchaVO> getCaptcha() {
         CaptchaVO captchaVO = authService.generateCaptcha();
         return R.ok(captchaVO);
@@ -39,7 +39,7 @@ public class AuthController {
      * 用户登录
      */
     @PostMapping("/login")
-    @Operation(summary = "用户登录", description = "用户名密码+验证码登录，返回Access Token和Refresh Token")
+    @Operation(operationId = "login", summary = "用户登录", description = "用户名密码+验证码登录，返回Access Token和Refresh Token")
     public R<LoginVO> login(@RequestBody LoginDTO loginDTO) {
         LoginVO loginVO = authService.login(loginDTO);
         return R.ok(loginVO);
@@ -59,7 +59,7 @@ public class AuthController {
      * 刷新Token
      */
     @PostMapping("/refresh")
-    @Operation(summary = "刷新Token", description = "使用Refresh Token获取新的Access Token")
+    @Operation(operationId = "refreshToken", summary = "刷新Token", description = "使用Refresh Token获取新的Access Token")
     public R<LoginVO> refresh(@RequestBody RefreshTokenDTO refreshTokenDTO) {
         LoginVO loginVO = authService.refreshToken(refreshTokenDTO);
         return R.ok(loginVO);
@@ -69,7 +69,7 @@ public class AuthController {
      * 登出
      */
     @PostMapping("/logout")
-    @Operation(summary = "用户登出", description = "注销当前Token，将Token加入黑名单")
+    @Operation(operationId = "logout", summary = "用户登出", description = "注销当前Token，将Token加入黑名单")
     public R<Void> logout(@RequestHeader("Authorization") String authorization) {
         authService.logout(authorization);
         return R.ok();
@@ -79,7 +79,7 @@ public class AuthController {
      * 获取当前用户信息
      */
     @GetMapping("/me")
-    @Operation(summary = "获取当前用户信息", description = "获取当前登录用户的信息")
+    @Operation(operationId = "getCurrentUser", summary = "获取当前用户信息", description = "获取当前登录用户的信息")
     public R<AdminUserDetails> getCurrentUser(@AuthenticationPrincipal AdminUserDetails userDetails) {
         return R.ok(userDetails);
     }

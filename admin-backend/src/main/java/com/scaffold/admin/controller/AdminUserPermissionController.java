@@ -28,7 +28,7 @@ public class AdminUserPermissionController {
     private final AdminUserMapper userMapper;
 
     @GetMapping("/{id}/roles")
-    @Operation(summary = "获取用户角色", description = "获取用户的角色列表")
+    @Operation(operationId = "getUserRoles", summary = "获取用户角色", description = "获取用户的角色列表")
     public R<List<RoleBaseVO>> getUserRoles(@PathVariable Long id) {
         AdminUser user = userMapper.selectById(id);
         if (user == null) {
@@ -53,7 +53,7 @@ public class AdminUserPermissionController {
     }
 
     @PostMapping("/{id}/roles")
-    @Operation(summary = "同步用户角色", description = "同步用户角色（全量替换，传入的为最终角色列表）")
+    @Operation(operationId = "syncUserRoles", summary = "同步用户角色", description = "同步用户角色（全量替换，传入的为最终角色列表）")
     public R<Void> assignUserRoles(
         @PathVariable Long id,
         @RequestBody @Valid AssignRolesDTO dto
@@ -66,18 +66,8 @@ public class AdminUserPermissionController {
         return R.ok();
     }
 
-    @DeleteMapping("/{id}/roles")
-    @Operation(summary = "批量撤销用户角色", description = "批量撤销用户角色")
-    public R<Void> revokeUserRoles(
-        @PathVariable Long id,
-        @RequestBody @Valid AssignRolesDTO dto
-    ) {
-        rbacService.removeUserRoles(id, dto.getRoleIds());
-        return R.ok();
-    }
-
-    @GetMapping("/{id}/permissions")
-    @Operation(summary = "用户权限总览", description = "获取用户所有权限的完整视图（含来源、覆盖状态、操作ID）")
+@GetMapping("/{id}/permissions")
+    @Operation(operationId = "getUserPermissions", summary = "用户权限总览", description = "获取用户所有权限的完整视图（含来源、覆盖状态、操作ID）")
     public R<UserPermissionOverviewVO> getUserPermissions(@PathVariable Long id) {
         AdminUser user = userMapper.selectById(id);
         if (user == null) {
@@ -88,7 +78,7 @@ public class AdminUserPermissionController {
     }
 
     @PutMapping("/{id}/permission-overrides")
-    @Operation(summary = "同步用户权限覆盖", description = "同步用户权限覆盖（对比差异，批量增删改）")
+    @Operation(operationId = "syncUserOverrides", summary = "同步用户权限覆盖", description = "同步用户权限覆盖（对比差异，批量增删改）")
     public R<Void> syncUserOverrides(
         @PathVariable Long id,
         @RequestBody @Valid SyncUserOverridesDTO dto
@@ -102,7 +92,7 @@ public class AdminUserPermissionController {
     }
 
     @DeleteMapping("/{id}/permission-overrides/{overrideId}")
-    @Operation(summary = "删除用户权限覆盖", description = "删除单个权限覆盖")
+    @Operation(operationId = "removeUserPermissionOverride", summary = "删除用户权限覆盖", description = "删除单个权限覆盖")
     public R<Void> removeUserPermissionOverride(
         @PathVariable Long id,
         @PathVariable Long overrideId
@@ -112,7 +102,7 @@ public class AdminUserPermissionController {
     }
 
     @DeleteMapping("/{id}/permission-overrides")
-    @Operation(summary = "清除用户所有权限覆盖", description = "清除用户所有权限覆盖")
+    @Operation(operationId = "clearUserPermissionOverrides", summary = "清除用户所有权限覆盖", description = "清除用户所有权限覆盖")
     public R<Void> clearUserPermissionOverrides(@PathVariable Long id) {
         rbacService.clearUserPermissionOverrides(id);
         return R.ok();

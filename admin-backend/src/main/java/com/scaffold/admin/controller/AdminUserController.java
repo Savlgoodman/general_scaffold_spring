@@ -14,7 +14,6 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -27,7 +26,7 @@ public class AdminUserController {
     private final AdminUserService adminUserService;
 
     @GetMapping
-    @Operation(summary = "用户列表", description = "分页获取用户列表")
+    @Operation(operationId = "listUsers", summary = "用户列表", description = "分页获取用户列表")
     public R<Page<AdminUserVO>> list(
         @RequestParam(defaultValue = "1") Integer pageNum,
         @RequestParam(defaultValue = "10") Integer pageSize,
@@ -44,7 +43,7 @@ public class AdminUserController {
     }
 
     @GetMapping("/{id:\\d+}")
-    @Operation(summary = "用户详情", description = "获取单个用户详情")
+    @Operation(operationId = "getUserDetail", summary = "用户详情", description = "获取单个用户详情")
     public R<AdminUserVO> getDetail(@PathVariable("id") Long id) {
         AdminUser user = adminUserService.getUserById(id);
         if (user == null) {
@@ -54,7 +53,7 @@ public class AdminUserController {
     }
 
     @PostMapping
-    @Operation(summary = "创建用户", description = "创建新用户")
+    @Operation(operationId = "createUser", summary = "创建用户", description = "创建新用户")
     public R<AdminUserVO> create(@RequestBody @Valid CreateAdminUserDTO dto) {
         try {
             AdminUser user = adminUserService.createUser(dto);
@@ -65,7 +64,7 @@ public class AdminUserController {
     }
 
     @PutMapping("/{id:\\d+}")
-    @Operation(summary = "更新用户", description = "更新用户信息")
+    @Operation(operationId = "updateUser", summary = "更新用户", description = "更新用户信息")
     public R<AdminUserVO> update(
         @PathVariable("id") Long id,
         @RequestBody @Valid UpdateAdminUserDTO dto
@@ -79,7 +78,7 @@ public class AdminUserController {
     }
 
     @DeleteMapping("/{id:\\d+}")
-    @Operation(summary = "删除用户", description = "删除单个用户")
+    @Operation(operationId = "deleteUser", summary = "删除用户", description = "删除单个用户")
     public R<Void> delete(@PathVariable("id") Long id) {
         try {
             adminUserService.deleteUser(id);
@@ -90,7 +89,7 @@ public class AdminUserController {
     }
 
     @DeleteMapping
-    @Operation(summary = "批量删除用户", description = "批量删除用户")
+    @Operation(operationId = "deleteUsersBatch", summary = "批量删除用户", description = "批量删除用户")
     public R<Void> deleteBatch(@RequestParam List<Long> ids) {
         if (ids == null || ids.isEmpty()) {
             return R.error(ResultCode.PARAM_ERROR, "用户ID列表不能为空");

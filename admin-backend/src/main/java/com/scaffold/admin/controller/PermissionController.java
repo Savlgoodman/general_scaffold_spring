@@ -26,7 +26,7 @@ public class PermissionController {
     private final AdminPermissionMapper permissionMapper;
 
     @GetMapping
-    @Operation(summary = "权限列表", description = "分页获取权限列表")
+    @Operation(operationId = "listPermissions", summary = "权限列表", description = "分页获取权限列表")
     public R<Page<PermissionBaseVO>> list(
         @RequestParam(defaultValue = "1") Integer pageNum,
         @RequestParam(defaultValue = "10") Integer pageSize,
@@ -57,7 +57,7 @@ public class PermissionController {
     }
 
     @GetMapping("/{id:\\d+}")
-    @Operation(summary = "权限详情", description = "获取单个权限详情")
+    @Operation(operationId = "getPermissionDetail", summary = "权限详情", description = "获取单个权限详情")
     public R<PermissionBaseVO> getDetail(@PathVariable("id") Long id) {
         AdminPermission permission = permissionService.getById(id);
         if (permission == null) {
@@ -67,7 +67,7 @@ public class PermissionController {
     }
 
     @GetMapping("/groups")
-    @Operation(summary = "权限分组列表", description = "获取所有权限分组（用于角色分配选择）")
+    @Operation(operationId = "getPermissionGroups", summary = "权限分组列表", description = "获取所有权限分组（用于角色分配选择）")
     public R<List<PermissionGroupVO>> getGroups() {
         List<PermissionGroupVO> groups = permissionService.getAllGroupedPermissions();
         return R.ok(groups);

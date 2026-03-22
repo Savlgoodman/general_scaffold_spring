@@ -17,10 +17,12 @@ spring:
     hikari:
       minimum-idle: 5
       maximum-pool-size: 20
-      idle-timeout: 30000
+      idle-timeout: 600000
       pool-name: AdminHikariCP
-      max-lifetime: 1800000
+      max-lifetime: 1200000
       connection-timeout: 30000
+      keepalive-time: 300000
+      validation-timeout: 5000
   data:
     redis:
       host: ${redis.host}
