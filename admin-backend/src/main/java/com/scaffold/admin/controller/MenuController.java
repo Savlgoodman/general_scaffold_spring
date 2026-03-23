@@ -6,12 +6,11 @@ import com.scaffold.admin.model.dto.SortMenuDTO;
 import com.scaffold.admin.model.dto.UpdateMenuDTO;
 import com.scaffold.admin.model.vo.MenuVO;
 import com.scaffold.admin.service.MenuService;
-import com.scaffold.admin.service.impl.AdminUserServiceImpl;
+import com.scaffold.admin.util.SecurityUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -33,9 +32,7 @@ public class MenuController {
     @GetMapping("/user-tree")
     @Operation(operationId = "getUserMenuTree", summary = "获取当前用户菜单树", description = "根据当前用户角色获取可见菜单树")
     public R<List<MenuVO>> getUserMenuTree() {
-        AdminUserServiceImpl.AdminUserDetails userDetails =
-                (AdminUserServiceImpl.AdminUserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        return R.ok(menuService.getUserMenuTree(userDetails.getId()));
+        return R.ok(menuService.getUserMenuTree(SecurityUtils.getCurrentUserId()));
     }
 
     @GetMapping("/{id:\\d+}")
