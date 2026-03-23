@@ -21,6 +21,7 @@ import com.scaffold.admin.security.JwtTokenProvider;
 import com.scaffold.admin.service.AuthService;
 import com.scaffold.admin.service.MenuService;
 import com.scaffold.admin.util.AuthCaptchaUtil;
+import com.scaffold.admin.util.IpUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -70,7 +71,7 @@ public class AuthServiceImpl implements AuthService {
     @Transactional
     public LoginVO login(LoginDTO loginDTO) {
         String username = loginDTO.getUsername();
-        String ip = getClientIp();
+        String ip = IpUtils.getClientIp(httpServletRequest);
         String userAgent = httpServletRequest.getHeader("User-Agent");
 
         // 检查账户是否被锁定
@@ -174,7 +175,7 @@ public class AuthServiceImpl implements AuthService {
         storeRefreshToken(user.getId(), refreshToken);
 
         // 记录登录日志
-        String ip = getClientIp();
+        String ip = IpUtils.getClientIp(httpServletRequest);
         String userAgent = httpServletRequest.getHeader("User-Agent");
         recordLoginLog(user.getUsername(), "success", ip, userAgent, "注册成功");
 
@@ -337,27 +338,6 @@ public class AuthServiceImpl implements AuthService {
         } catch (Exception e) {
             log.error("记录登录日志失败", e);
         }
-    }
-
-    /**
-     * 获取客户端IP
-     */
-    private String getClientIp() {
-        String ip = httpServletRequest.getHeader("X-Forwarded-For");
-        if (StrUtil.isBlank(ip) || "unknown".equalsIgnoreCase(ip)) {
-            ip = httpServletRequest.getHeader("Proxy-Client-IP");
-        }
-        if (StrUtil.isBlank(ip) || "unknown".equalsIgnoreCase(ip)) {
-            ip = httpServletRequest.getHeader("WL-Proxy-Client-IP");
-        }
-        if (StrUtil.isBlank(ip) || "unknown".equalsIgnoreCase(ip)) {
-            ip = httpServletRequest.getRemoteAddr();
-        }
-        // 多级代理时取第一个IP
-        if (ip != null && ip.contains(",")) {
-            ip = ip.split(",")[0].trim();
-        }
-        return ip;
     }
 
     /**
