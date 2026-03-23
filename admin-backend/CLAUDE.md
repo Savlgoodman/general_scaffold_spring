@@ -172,13 +172,39 @@ boolean isSuperuser = SecurityUtils.isSuperuser();
 - `JwtTokenProvider.verifyToken(token)` 返回 `DecodedJWT`，后续通过 `getUserIdFromJwt(jwt)` / `isAccessToken(jwt)` 等重载方法提取信息
 - **同一次请求只调用一次 `verifyToken()`**，复用 `DecodedJWT` 对象，禁止多次验证同一 token
 
-### 日志规范
+### 日志体系
 
-- 日志配置在 `logback-spring.xml`，按 dev/prod profile 区分
+**四类日志，全部异步写入数据库**（通过 `LogWriteService` + `@Async("logExecutor")`）：
+
+| 日志类型 | 实现方式 | 数据库表 |
+|----------|----------|----------|
+| API 请求日志 | `ApiLogAspect` AOP 切面拦截所有 Controller | `admin_api_log` |
+| 登录日志 | `AuthServiceImpl.recordLoginLog()` 直接调用 | `admin_login_log` |
+| 操作审计日志 | `@OperationLog` 注解 + `OperationLogAspect` 切面 | `admin_operation_log` |
+| 系统异常日志 | `GlobalExceptionHandler` 兜底异常时写入 | `admin_error_log` |
+
+**操作审计注解用法**（标注在 Service 实现类的 CUD 方法上）：
+
+```java
+@OperationLog(module = "用户管理", type = OperationType.CREATE)
+public AdminUser createUser(CreateAdminUserDTO dto) { ... }
+```
+
+**异步基础设施**：
+- `AsyncConfig` 配置 `logExecutor` 线程池（core=2, max=5, queue=500）
+- `LogWriteService` 提供 `writeApiLog` / `writeErrorLog` / `writeOperationLog` 三个 `@Async` 方法
+- 所有日志写入失败只记录控制台 error，不影响业务流程
+
+**日志格式配置**：
+- `logback-spring.xml` 按 dev/prod profile 区分
 - dev 环境：彩色精简控制台 + 7 天滚动文件
 - prod 环境：异步写入 + 30 天滚动
 - 项目代码日志级别为 `INFO`，需要调试时临时改为 `DEBUG`
-- Spring Security 框架日志级别为 `WARN`，避免每次请求输出过滤器链日志
+- Spring Security 框架日志级别为 `WARN`
+
+**工具类**：
+- `IpUtils.getClientIp(request)` — 统一 IP 提取（X-Forwarded-For > Proxy-Client-IP > getRemoteAddr）
+- 所有需要 IP 的地方统一使用此工具类
 
 ### 错误信息安全
 
