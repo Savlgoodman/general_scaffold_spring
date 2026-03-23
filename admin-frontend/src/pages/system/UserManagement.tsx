@@ -15,13 +15,14 @@ import {
 } from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
 import { useToast } from '@/hooks/use-toast'
-import { Plus, Search, Pencil, Trash2, RefreshCw, UserCog, Shield } from 'lucide-react'
+import { Plus, Search, Pencil, Trash2, RefreshCw, UserCog, Shield, Eye } from 'lucide-react'
 import { Checkbox } from '@/components/ui/checkbox'
 import { getAdminUsers } from '@/api/generated/admin-users/admin-users'
 import { getAdminUsersPermission } from '@/api/generated/admin-users-permission/admin-users-permission'
 import { getRoles } from '@/api/generated/roles/roles'
 import type { AdminUserVO, RoleBaseVO } from '@/api/generated/model'
 import UserPermissionDialog from './components/UserPermissionDialog'
+import UserDetailDialog from './components/UserDetailDialog'
 
 const usersApi = getAdminUsers()
 const permApi = getAdminUsersPermission()
@@ -71,6 +72,10 @@ export default function UserManagement() {
   const [permDialogOpen, setPermDialogOpen] = useState(false)
   const [permUserId, setPermUserId] = useState<number | null>(null)
   const [permUsername, setPermUsername] = useState('')
+
+  const [detailDialogOpen, setDetailDialogOpen] = useState(false)
+  const [detailUserId, setDetailUserId] = useState<number | null>(null)
+  const [detailUsername, setDetailUsername] = useState('')
 
   const fetchUsers = useCallback(async () => {
     setLoading(true)
@@ -209,6 +214,10 @@ export default function UserManagement() {
     setPermUserId(user.id ?? null); setPermUsername(user.username ?? ''); setPermDialogOpen(true)
   }
 
+  const openDetailDialog = (user: AdminUserVO) => {
+    setDetailUserId(user.id ?? null); setDetailUsername(user.username ?? ''); setDetailDialogOpen(true)
+  }
+
   const totalPages = Math.ceil(total / pageSize)
 
   return (
@@ -272,6 +281,7 @@ export default function UserManagement() {
                     <TableCell className="text-center py-3">
                       <div className="flex justify-center gap-1">
                         <Button variant="ghost" size="icon" className="h-8 w-8" title="分配角色" onClick={() => openRoleDialog(user)}><UserCog className="w-3.5 h-3.5" /></Button>
+                        <Button variant="ghost" size="icon" className="h-8 w-8" title="用户详情" onClick={() => openDetailDialog(user)}><Eye className="w-3.5 h-3.5" /></Button>
                         <Button variant="ghost" size="icon" className="h-8 w-8" title="权限管理" onClick={() => openPermDialog(user)}><Shield className="w-3.5 h-3.5" /></Button>
                         <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => user.id && openEditDialog(user.id)}><Pencil className="w-3.5 h-3.5" /></Button>
                         <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => { setDeletingId(user.id ?? null); setDeleteDialogOpen(true) }}><Trash2 className="w-3.5 h-3.5 text-destructive" /></Button>
@@ -357,6 +367,7 @@ export default function UserManagement() {
       </Dialog>
 
       <UserPermissionDialog open={permDialogOpen} onOpenChange={setPermDialogOpen} userId={permUserId} username={permUsername} />
+      <UserDetailDialog open={detailDialogOpen} onOpenChange={setDetailDialogOpen} userId={detailUserId} username={detailUsername} />
     </div>
   )
 }

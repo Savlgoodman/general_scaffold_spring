@@ -13,9 +13,13 @@ import com.scaffold.admin.model.entity.AdminMenu;
 import com.scaffold.admin.model.entity.AdminRoleMenu;
 import com.scaffold.admin.model.entity.AdminUserRole;
 import com.scaffold.admin.model.vo.MenuVO;
+import com.scaffold.admin.model.vo.RoleBaseVO;
 import com.scaffold.admin.model.vo.RoleMenuVO;
+import com.scaffold.admin.model.vo.UserMenuOverviewVO;
 import com.scaffold.admin.mapper.AdminRoleMapper;
+import com.scaffold.admin.mapper.AdminUserMapper;
 import com.scaffold.admin.model.entity.AdminRole;
+import com.scaffold.admin.model.entity.AdminUser;
 import com.scaffold.admin.service.MenuService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.BeanUtils;
@@ -30,6 +34,7 @@ import java.util.stream.Collectors;
 public class MenuServiceImpl implements MenuService {
 
     private final AdminMenuMapper menuMapper;
+    private final AdminUserMapper userMapper;
     private final AdminUserRoleMapper userRoleMapper;
     private final AdminRoleMenuMapper roleMenuMapper;
     private final AdminRoleMapper roleMapper;
@@ -292,6 +297,151 @@ public class MenuServiceImpl implements MenuService {
                             .in(AdminRoleMenu::getMenuId, toRemove)
             );
         }
+    }
+
+    @Override
+    public UserMenuOverviewVO getUserMenuOverview(Long userId) {
+        AdminUser user = userMapper.selectById(userId);
+        if (user == null) {
+            throw new BusinessException(ResultCode.NOT_FOUND, "用户不存在");
+        }
+        boolean isSuperuser = user.getIsSuperuser() != null && user.getIsSuperuser() == 1;
+
+        // 查用户角色
+        List<AdminUserRole> userRoles = userRoleMapper.selectList(
+                new LambdaQueryWrapper<AdminUserRole>().eq(AdminUserRole::getUserId, userId)
+        );
+        List<Long> roleIds = userRoles.stream().map(AdminUserRole::getRoleId).toList();
+        List<AdminRole> roles = roleIds.isEmpty() ? Collections.emptyList() :
+                roleMapper.selectList(new LambdaQueryWrapper<AdminRole>().in(AdminRole::getId, roleIds));
+
+        List<RoleBaseVO> roleVOs = roles.stream().map(r -> {
+            RoleBaseVO vo = new RoleBaseVO();
+            vo.setId(r.getId());
+            vo.setName(r.getName());
+            vo.setCode(r.getCode());
+            vo.setDescription(r.getDescription());
+            vo.setStatus(r.getStatus());
+            vo.setSort(r.getSort());
+            return vo;
+        }).toList();
+
+        // 查全量菜单
+        List<AdminMenu> allMenus = menuMapper.selectList(
+                new LambdaQueryWrapper<AdminMenu>().orderByAsc(AdminMenu::getSort)
+        );
+        Map<Long, List<AdminMenu>> childrenMap = allMenus.stream()
+                .filter(m -> m.getParentId() != null && m.getParentId() != 0)
+                .collect(Collectors.groupingBy(AdminMenu::getParentId));
+        List<AdminMenu> topMenus = allMenus.stream()
+                .filter(m -> m.getParentId() == null || m.getParentId() == 0).toList();
+
+        // 查角色-菜单关联：menuId → 角色名列表
+        Map<Long, List<String>> menuSourceRoles = new HashMap<>();
+        if (!roleIds.isEmpty()) {
+            List<AdminRoleMenu> allRoleMenus = roleMenuMapper.selectList(
+                    new LambdaQueryWrapper<AdminRoleMenu>().in(AdminRoleMenu::getRoleId, roleIds)
+            );
+            Map<Long, String> roleNameMap = roles.stream()
+                    .collect(Collectors.toMap(AdminRole::getId, AdminRole::getName));
+            for (AdminRoleMenu rm : allRoleMenus) {
+                menuSourceRoles.computeIfAbsent(rm.getMenuId(), k -> new ArrayList<>())
+                        .add(roleNameMap.getOrDefault(rm.getRoleId(), "未知角色"));
+            }
+        }
+
+        // 构建分组
+        List<UserMenuOverviewVO.UserMenuOverviewVOGroup> groups = new ArrayList<>();
+        int totalMenus = 0;
+        int grantedCount = 0;
+
+        for (AdminMenu top : topMenus) {
+            UserMenuOverviewVO.UserMenuOverviewVOGroup group = new UserMenuOverviewVO.UserMenuOverviewVOGroup();
+            group.setId(top.getId());
+            group.setName(top.getName());
+            group.setPath(top.getPath());
+            group.setIcon(top.getIcon());
+            group.setType(top.getType());
+
+            boolean topGranted;
+            String topSource;
+            List<String> topSourceRoles;
+
+            if (isSuperuser) {
+                topGranted = true;
+                topSource = "SUPER_USER";
+                topSourceRoles = Collections.emptyList();
+            } else {
+                topSourceRoles = menuSourceRoles.getOrDefault(top.getId(), Collections.emptyList());
+                topGranted = !topSourceRoles.isEmpty();
+                topSource = topGranted ? "ROLE" : "NONE";
+            }
+            group.setGranted(topGranted);
+            group.setSource(topSource);
+            group.setSourceRoles(topSourceRoles);
+
+            totalMenus++;
+            if (topGranted) grantedCount++;
+
+            boolean dirGranted = "directory".equals(top.getType()) && topGranted;
+            List<AdminMenu> children = childrenMap.getOrDefault(top.getId(), Collections.emptyList());
+            List<UserMenuOverviewVO.UserMenuOverviewVOItem> items = new ArrayList<>();
+            int childGranted = 0;
+
+            for (AdminMenu child : children) {
+                UserMenuOverviewVO.UserMenuOverviewVOItem item = new UserMenuOverviewVO.UserMenuOverviewVOItem();
+                item.setId(child.getId());
+                item.setName(child.getName());
+                item.setPath(child.getPath());
+                item.setIcon(child.getIcon());
+                item.setType(child.getType());
+
+                if (isSuperuser) {
+                    item.setGranted(true);
+                    item.setSource("SUPER_USER");
+                    item.setSourceRoles(Collections.emptyList());
+                    item.setCoveredByDirectory(false);
+                } else {
+                    List<String> childSourceRoles = menuSourceRoles.getOrDefault(child.getId(), Collections.emptyList());
+                    boolean directlyGranted = !childSourceRoles.isEmpty();
+
+                    if (dirGranted && !directlyGranted) {
+                        item.setGranted(true);
+                        item.setSource("DIRECTORY");
+                        item.setSourceRoles(topSourceRoles);
+                        item.setCoveredByDirectory(true);
+                    } else {
+                        item.setGranted(directlyGranted || dirGranted);
+                        item.setSource(directlyGranted ? "ROLE" : (dirGranted ? "DIRECTORY" : "NONE"));
+                        item.setSourceRoles(directlyGranted ? childSourceRoles : (dirGranted ? topSourceRoles : Collections.emptyList()));
+                        item.setCoveredByDirectory(dirGranted && !directlyGranted);
+                    }
+                }
+                items.add(item);
+                totalMenus++;
+                if (item.isGranted()) {
+                    grantedCount++;
+                    childGranted++;
+                }
+            }
+            group.setChildren(items);
+            group.setTotalCount(children.size());
+            group.setGrantedCount(childGranted);
+            groups.add(group);
+        }
+
+        UserMenuOverviewVO.UserMenuOverviewVOSummary summary = new UserMenuOverviewVO.UserMenuOverviewVOSummary();
+        summary.setTotalMenus(totalMenus);
+        summary.setGrantedCount(grantedCount);
+
+        UserMenuOverviewVO vo = new UserMenuOverviewVO();
+        vo.setUserId(userId);
+        vo.setUsername(user.getUsername());
+        vo.setSuperuser(isSuperuser);
+        vo.setRoles(roleVOs);
+        vo.setGroups(groups);
+        vo.setSummary(summary);
+        return vo;
     }
 
     private void deleteChildren(Long parentId) {

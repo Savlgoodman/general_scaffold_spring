@@ -8,7 +8,9 @@ import com.scaffold.admin.model.dto.SyncUserOverridesDTO;
 import com.scaffold.admin.model.entity.AdminRole;
 import com.scaffold.admin.model.entity.AdminUser;
 import com.scaffold.admin.model.vo.RoleBaseVO;
+import com.scaffold.admin.model.vo.UserMenuOverviewVO;
 import com.scaffold.admin.model.vo.UserPermissionOverviewVO;
+import com.scaffold.admin.service.MenuService;
 import com.scaffold.admin.service.RBACService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -25,6 +27,7 @@ import java.util.List;
 public class AdminUserPermissionController {
 
     private final RBACService rbacService;
+    private final MenuService menuService;
     private final AdminUserMapper userMapper;
 
     @GetMapping("/{id}/roles")
@@ -64,6 +67,16 @@ public class AdminUserPermissionController {
         }
         rbacService.syncUserRoles(id, dto.getRoleIds());
         return R.ok();
+    }
+
+    @GetMapping("/{id}/menus")
+    @Operation(operationId = "getUserMenuOverview", summary = "用户菜单总览", description = "获取用户所有菜单的完整视图（含来源、目录覆盖状态）")
+    public R<UserMenuOverviewVO> getUserMenuOverview(@PathVariable Long id) {
+        AdminUser user = userMapper.selectById(id);
+        if (user == null) {
+            return R.error(ResultCode.NOT_FOUND, "用户不存在");
+        }
+        return R.ok(menuService.getUserMenuOverview(id));
     }
 
 @GetMapping("/{id}/permissions")

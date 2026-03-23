@@ -8,6 +8,7 @@
 import type {
   AssignRolesDTO,
   RListRoleBaseVO,
+  RUserMenuOverviewVO,
   RUserPermissionOverviewVO,
   RVoid,
   SyncUserOverridesDTO
@@ -88,6 +89,18 @@ const getUserPermissions = (
       options);
     }
   /**
+ * 获取用户所有菜单的完整视图（含来源、目录覆盖状态）
+ * @summary 用户菜单总览
+ */
+const getUserMenuOverview = (
+    id: number,
+ options?: SecondParameter<typeof customInstance<RUserMenuOverviewVO>>,) => {
+      return customInstance<RUserMenuOverviewVO>(
+      {url: `/api/admin/admin-users/${id}/menus`, method: 'GET'
+    },
+      options);
+    }
+  /**
  * 删除单个权限覆盖
  * @summary 删除用户权限覆盖
  */
@@ -100,10 +113,11 @@ const removeUserPermissionOverride = (
     },
       options);
     }
-  return {syncUserOverrides,clearUserPermissionOverrides,getUserRoles,syncUserRoles,getUserPermissions,removeUserPermissionOverride}};
+  return {syncUserOverrides,clearUserPermissionOverrides,getUserRoles,syncUserRoles,getUserPermissions,getUserMenuOverview,removeUserPermissionOverride}};
 export type SyncUserOverridesResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAdminUsersPermission>['syncUserOverrides']>>>
 export type ClearUserPermissionOverridesResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAdminUsersPermission>['clearUserPermissionOverrides']>>>
 export type GetUserRolesResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAdminUsersPermission>['getUserRoles']>>>
 export type SyncUserRolesResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAdminUsersPermission>['syncUserRoles']>>>
 export type GetUserPermissionsResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAdminUsersPermission>['getUserPermissions']>>>
+export type GetUserMenuOverviewResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAdminUsersPermission>['getUserMenuOverview']>>>
 export type RemoveUserPermissionOverrideResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAdminUsersPermission>['removeUserPermissionOverride']>>>

@@ -5,6 +5,7 @@ import com.scaffold.admin.model.dto.SortMenuDTO;
 import com.scaffold.admin.model.dto.UpdateMenuDTO;
 import com.scaffold.admin.model.vo.MenuVO;
 import com.scaffold.admin.model.vo.RoleMenuVO;
+import com.scaffold.admin.model.vo.UserMenuOverviewVO;
 
 import java.util.List;
 
@@ -27,4 +28,6 @@ public interface MenuService {
     RoleMenuVO getRoleMenus(Long roleId);
 
     void syncRoleMenus(Long roleId, List<Long> menuIds);
+
+    UserMenuOverviewVO getUserMenuOverview(Long userId);
 }
