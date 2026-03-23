@@ -32,7 +32,8 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class ApiLogAspect {
 
-    private static final int MAX_BODY_LENGTH = 2000;
+    /** 请求体/响应体最大存储长度，PostgreSQL TEXT 无限制，此处设上限防止异常大报文 */
+    private static final int MAX_BODY_LENGTH = 65536;
 
     private static final Set<String> EXCLUDE_PREFIXES = Set.of(
         "/api/admin/auth/",
