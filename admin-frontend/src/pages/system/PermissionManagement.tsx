@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
+import { CardGroupSkeleton } from '@/components/skeletons'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -154,9 +155,7 @@ export default function PermissionManagement() {
       </div>
 
       {loading ? (
-        <div className="flex items-center justify-center py-20">
-          <RefreshCw className="w-8 h-8 animate-spin text-muted-foreground" />
-        </div>
+        <CardGroupSkeleton groups={4} itemsPerGroup={5} />
       ) : filteredGroups.length === 0 ? (
         <Card>
           <CardContent className="py-20 text-center text-muted-foreground">

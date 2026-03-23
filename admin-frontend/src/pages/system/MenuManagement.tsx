@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
+import { CardGroupSkeleton } from '@/components/skeletons'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -301,9 +302,7 @@ export default function MenuManagement() {
 
       {/* 内容 */}
       {loading ? (
-        <div className="flex items-center justify-center py-20">
-          <RefreshCw className="w-8 h-8 animate-spin text-muted-foreground" />
-        </div>
+        <CardGroupSkeleton groups={3} itemsPerGroup={4} />
       ) : menuTree.length === 0 ? (
         <Card>
           <CardContent className="py-20 text-center text-muted-foreground">

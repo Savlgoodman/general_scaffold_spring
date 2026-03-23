@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
+import { DialogGroupSkeleton } from '@/components/skeletons'
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
 } from '@/components/ui/dialog'
@@ -6,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Badge } from '@/components/ui/badge'
 import { useToast } from '@/hooks/use-toast'
 import {
-  RefreshCw, ChevronDown, ChevronRight, FolderOpen, CircleCheck, CircleX, CircleMinus,
+  ChevronDown, ChevronRight, FolderOpen, CircleCheck, CircleX, CircleMinus,
   LayoutDashboard, Users, Shield, Menu, Key, FileText, LogIn,
   AlertCircle, Settings, Globe, Home, Database, Bell, BookOpen, Folder,
   type LucideIcon,
@@ -132,9 +133,7 @@ export default function UserDetailDialog({ open, onOpenChange, userId, username 
         </DialogHeader>
 
         {loading ? (
-          <div className="flex items-center justify-center py-16">
-            <RefreshCw className="w-6 h-6 animate-spin text-muted-foreground" />
-          </div>
+          <DialogGroupSkeleton groups={3} itemsPerGroup={3} />
         ) : (
           <Tabs defaultValue="menus" className="flex-1 overflow-hidden flex flex-col">
             <TabsList className="shrink-0">

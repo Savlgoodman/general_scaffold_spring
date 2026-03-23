@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
+import { DialogGroupSkeleton } from '@/components/skeletons'
 import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
 } from '@/components/ui/dialog'
@@ -6,7 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { useToast } from '@/hooks/use-toast'
 import {
-  RefreshCw, Check, X, ChevronDown, ChevronRight, Plus, Pencil, Trash2,
+  Check, X, ChevronDown, ChevronRight, Plus, Pencil, Trash2,
 } from 'lucide-react'
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
@@ -181,7 +182,7 @@ export default function UserPermissionDialog({ open, onOpenChange, userId, usern
           <DialogDescription>查看用户权限来源，添加/编辑/删除覆盖</DialogDescription>
         </DialogHeader>
         {loading ? (
-          <div className="flex items-center justify-center py-12"><RefreshCw className="w-6 h-6 animate-spin text-muted-foreground" /></div>
+          <DialogGroupSkeleton groups={4} itemsPerGroup={4} />
         ) : data ? (
           <div className="flex-1 overflow-y-auto space-y-4 py-2">
             {/* 角色 + 汇总 */}

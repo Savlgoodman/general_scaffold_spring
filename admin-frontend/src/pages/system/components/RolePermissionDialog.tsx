@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
+import { DialogGroupSkeleton } from '@/components/skeletons'
 import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
 } from '@/components/ui/dialog'
@@ -6,7 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Checkbox } from '@/components/ui/checkbox'
 import { useToast } from '@/hooks/use-toast'
-import { RefreshCw, ChevronDown, ChevronRight, FolderOpen } from 'lucide-react'
+import { ChevronDown, ChevronRight, FolderOpen } from 'lucide-react'
 import { getRoles } from '@/api/generated/roles/roles'
 import type { RolePermissionFullVO, GroupSection } from '@/api/generated/model'
 
@@ -124,7 +125,7 @@ export default function RolePermissionDialog({ open, onOpenChange, roleId, roleN
           <DialogDescription>已选 {selectedIds.size}/{data?.summary?.totalPermissions || 0} 个权限。组权限勾选后，子权限自动覆盖。</DialogDescription>
         </DialogHeader>
         {loading ? (
-          <div className="flex items-center justify-center py-12"><RefreshCw className="w-6 h-6 animate-spin text-muted-foreground" /></div>
+          <DialogGroupSkeleton groups={4} itemsPerGroup={4} />
         ) : (
           <div className="flex-1 overflow-y-auto space-y-3 py-2">
             {data?.groups?.map(group => {

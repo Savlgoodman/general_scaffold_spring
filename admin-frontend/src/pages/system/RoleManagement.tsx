@@ -20,6 +20,7 @@ import { getRoles } from '@/api/generated/roles/roles'
 import type { RoleBaseVO } from '@/api/generated/model'
 import RolePermissionDialog from './components/RolePermissionDialog'
 import RoleMenuDialog from './components/RoleMenuDialog'
+import { TableSkeleton } from '@/components/skeletons'
 
 const rolesApi = getRoles()
 
@@ -205,7 +206,7 @@ export default function RoleManagement() {
               </TableHeader>
               <TableBody>
                 {loading ? (
-                  <TableRow><TableCell colSpan={6} className="text-center py-12 text-muted-foreground">加载中...</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={6} className="p-0"><TableSkeleton rows={5} cols={6} /></TableCell></TableRow>
                 ) : roles.length === 0 ? (
                   <TableRow><TableCell colSpan={6} className="text-center py-12 text-muted-foreground">暂无数据</TableCell></TableRow>
                 ) : roles.map((role, i) => (

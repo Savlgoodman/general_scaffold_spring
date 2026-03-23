@@ -23,6 +23,7 @@ import { getRoles } from '@/api/generated/roles/roles'
 import type { AdminUserVO, RoleBaseVO } from '@/api/generated/model'
 import UserPermissionDialog from './components/UserPermissionDialog'
 import UserDetailDialog from './components/UserDetailDialog'
+import { TableSkeleton, DialogGroupSkeleton } from '@/components/skeletons'
 
 const usersApi = getAdminUsers()
 const permApi = getAdminUsersPermission()
@@ -262,7 +263,7 @@ export default function UserManagement() {
               </TableHeader>
               <TableBody>
                 {loading ? (
-                  <TableRow><TableCell colSpan={8} className="text-center py-12 text-muted-foreground">加载中...</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={8} className="p-0"><TableSkeleton rows={5} cols={8} /></TableCell></TableRow>
                 ) : users.length === 0 ? (
                   <TableRow><TableCell colSpan={8} className="text-center py-12 text-muted-foreground">暂无数据</TableCell></TableRow>
                 ) : users.map((user, i) => (
@@ -346,7 +347,7 @@ export default function UserManagement() {
         <DialogContent className="sm:max-w-md">
           <DialogHeader><DialogTitle>分配角色 - {currentUsername}</DialogTitle><DialogDescription>勾选该用户拥有的角色</DialogDescription></DialogHeader>
           {roleLoading ? (
-            <div className="flex items-center justify-center py-8"><RefreshCw className="w-6 h-6 animate-spin text-muted-foreground" /></div>
+            <DialogGroupSkeleton groups={2} itemsPerGroup={3} />
           ) : (
             <div className="py-4 max-h-80 overflow-y-auto space-y-2">
               {allRoles.map(role => (

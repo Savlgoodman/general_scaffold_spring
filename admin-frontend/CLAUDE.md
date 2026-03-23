@@ -154,7 +154,41 @@ npx shadcn@latest add <component>
 5. ⬜ 日志与监控
 6. ⬜ 业务功能（通知公告、个人中心）
 
+## 骨架屏规范
 
+### 强制规则
+
+- **所有页面和对话框的 loading 状态必须使用骨架屏**，禁止使用旋转图标（`RefreshCw animate-spin`）或纯文字（"加载中..."）
+- 使用 `src/components/skeletons.tsx` 中的可复用骨架组件
+
+### 可用骨架组件
+
+| 组件 | 用途 | 示例 |
+|------|------|------|
+| `TableSkeleton` | 表格页面 | `<TableSkeleton rows={5} cols={6} />` |
+| `CardGroupSkeleton` | Card 分组页面 | `<CardGroupSkeleton groups={3} itemsPerGroup={4} />` |
+| `DialogGroupSkeleton` | 对话框内容 | `<DialogGroupSkeleton groups={3} />` |
+
+### 使用模式
+
+```tsx
+import { TableSkeleton } from '@/components/skeletons'
+
+// 表格页面
+{loading ? (
+  <TableSkeleton rows={5} cols={6} />
+) : data.length === 0 ? (
+  <EmptyState />
+) : (
+  <ActualTable />
+)}
+```
+
+### 新增页面时
+
+1. 选择匹配布局的骨架组件
+2. 如果现有组件不匹配，在 `skeletons.tsx` 中新增
+3. 骨架屏的行/列/组数应与实际内容大致匹配
 
 ## Git 提交规范
 

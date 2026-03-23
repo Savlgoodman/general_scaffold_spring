@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
+import { DialogGroupSkeleton } from '@/components/skeletons'
 import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
 } from '@/components/ui/dialog'
@@ -7,7 +8,7 @@ import { Badge } from '@/components/ui/badge'
 import { Checkbox } from '@/components/ui/checkbox'
 import { useToast } from '@/hooks/use-toast'
 import {
-  RefreshCw, ChevronDown, ChevronRight, FolderOpen,
+  ChevronDown, ChevronRight, FolderOpen,
   LayoutDashboard, Users, Shield, Menu, Key, FileText, LogIn,
   AlertCircle, Settings, Globe, Home, Database, Bell, BookOpen, Folder,
   type LucideIcon,
@@ -154,9 +155,7 @@ export default function RoleMenuDialog({ open, onOpenChange, roleId, roleName, o
           </DialogDescription>
         </DialogHeader>
         {loading ? (
-          <div className="flex items-center justify-center py-12">
-            <RefreshCw className="w-6 h-6 animate-spin text-muted-foreground" />
-          </div>
+          <DialogGroupSkeleton groups={3} itemsPerGroup={3} />
         ) : (
           <div className="flex-1 overflow-y-auto space-y-3 py-2">
             {data?.groups?.map(group => {
