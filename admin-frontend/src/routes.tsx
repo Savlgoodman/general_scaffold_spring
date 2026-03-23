@@ -4,6 +4,10 @@ import UserManagement from "@/pages/system/UserManagement"
 import RoleManagement from "@/pages/system/RoleManagement"
 import PermissionManagement from "@/pages/system/PermissionManagement"
 import MenuManagement from "@/pages/system/MenuManagement"
+import ApiLogPage from "@/pages/logs/ApiLogPage"
+import LoginLogPage from "@/pages/logs/LoginLogPage"
+import OperationLogPage from "@/pages/logs/OperationLogPage"
+import ErrorLogPage from "@/pages/logs/ErrorLogPage"
 
 export interface RouteConfig {
   path: string
@@ -23,8 +27,8 @@ export const appRoutes: RouteConfig[] = [
   { path: "/system/role", title: "角色管理", icon: "Shield", element: <RoleManagement /> },
   { path: "/system/menu", title: "菜单管理", icon: "Menu", element: <MenuManagement /> },
   { path: "/system/permission", title: "权限管理", icon: "Key", element: <PermissionManagement /> },
-  { path: "/logs/api", title: "API日志", icon: "FileText", element: <Dashboard /> },
-  { path: "/logs/login", title: "登录日志", icon: "LogIn", element: <Dashboard /> },
-  { path: "/logs/operation", title: "操作日志", icon: "FileText", element: <Dashboard /> },
-  { path: "/logs/error", title: "异常日志", icon: "AlertCircle", element: <Dashboard /> },
+  { path: "/logs/api", title: "API日志", icon: "FileText", element: <ApiLogPage /> },
+  { path: "/logs/login", title: "登录日志", icon: "LogIn", element: <LoginLogPage /> },
+  { path: "/logs/operation", title: "操作日志", icon: "FileText", element: <OperationLogPage /> },
+  { path: "/logs/error", title: "异常日志", icon: "AlertCircle", element: <ErrorLogPage /> },
 ]

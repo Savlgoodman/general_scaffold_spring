@@ -60,5 +60,6 @@ admin-backend/src/main/resources/application-dev.yml
 admin-backend/src/main/resources/application-test.yml
 
 # Logs
-logs/
+/logs/
+admin-backend/logs/
 *.log
