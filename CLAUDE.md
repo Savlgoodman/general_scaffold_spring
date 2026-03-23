@@ -37,6 +37,47 @@ general_scaffold_spring/
 - 确保 `application.yml` 配置 `springdoc.default-produces-media-type: application/json`，否则 orval 会生成 Blob 返回类型
 - **Controller 方法必须添加 `operationId`**：`@Operation(operationId = "listUsers", summary = "...")`，否则 orval 会用数字后缀区分同名方法（如 `getDetail2`、`list1`），命名规范：`{动词}{资源}`（如 `listRoles`、`getUserDetail`、`syncRolePermissions`）
 
+## 前端路由注册流程
+
+### 单一数据源：`src/routes.tsx`
+
+所有受保护页面的路由定义在 `admin-frontend/src/routes.tsx` 的 `appRoutes` 数组中。**新增页面只需在此处添加一条**，路由注册和开发者模式菜单同时生效。
+
+```typescript
+// src/routes.tsx
+export const appRoutes: RouteConfig[] = [
+  { path: "/new-page", title: "新页面", icon: "Globe", element: <NewPage /> },
+  // ...
+]
+```
+
+### 消费方
+
+| 文件 | 用途 |
+|------|------|
+| `src/App.tsx` | 遍历 `appRoutes` 注册 React Router 路由 |
+| `src/components/layout/AppSidebar.tsx` | 开发者模式下遍历 `appRoutes` 渲染侧边栏菜单 |
+
+### 新增页面完整步骤
+
+1. 在 `src/pages/` 下创建页面组件
+2. 在 `src/routes.tsx` 的 `appRoutes` 数组中添加一条（path、title、icon、element）
+3. 完成 — 路由自动注册，开发者模式菜单自动出现
+4. （可选）后端 `admin_menu` 表中插入对应菜单记录，分配给角色后普通用户也可见
+
+### 菜单控制机制
+
+- **超级管理员 + 开发者模式 ON**：侧边栏显示 `appRoutes` 中所有前端路由（扁平列表），不受后端数据库控制
+- **超级管理员 + 开发者模式 OFF / 普通用户**：侧边栏按后端登录接口返回的菜单树渲染（`admin_menu` + `admin_role_menu`）
+- 开发者模式开关在 Header 右上角，仅超级管理员可见
+
+### Token 刷新机制
+
+- `src/api/custom-instance.ts` 中实现了 access token 自动刷新
+- 401 响应时自动使用 refresh token 换取新 token 并重试原请求
+- 并发请求加锁，只刷新一次，其余排队等待
+- refresh token 也失效时，弹出 toast「登录失效！请重新登录」并跳转登录页
+
 ## 关键开发经验
 
 ### MyBatis-Plus @TableLogic
