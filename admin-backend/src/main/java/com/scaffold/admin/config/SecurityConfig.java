@@ -1,5 +1,6 @@
 package com.scaffold.admin.config;
 
+import com.scaffold.admin.common.SecurityConstants;
 import com.scaffold.admin.security.JwtAuthenticationFilter;
 import com.scaffold.admin.security.PermissionAuthorizationFilter;
 import lombok.RequiredArgsConstructor;
@@ -34,16 +35,7 @@ public class SecurityConfig {
             .sessionManagement(session -> session
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers(
-                    "/health",
-                    "/api/admin/auth/**",
-                    "/swagger-ui/**",
-                    "/swagger-ui.html",
-                    "/api-docs/**",
-                    "/v3/api-docs/**",
-                    "/webjars/**",
-                    "/openapi.json"
-                ).permitAll()
+                .requestMatchers(SecurityConstants.PUBLIC_PATHS).permitAll()
                 .anyRequest().authenticated())
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
             .addFilterAfter(permissionAuthorizationFilter, JwtAuthenticationFilter.class)

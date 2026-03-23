@@ -3,6 +3,7 @@ package com.scaffold.admin.security;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.scaffold.admin.common.R;
 import com.scaffold.admin.common.ResultCode;
+import com.scaffold.admin.common.SecurityConstants;
 import com.scaffold.admin.model.entity.AdminUser;
 import com.scaffold.admin.service.RBACService;
 import com.scaffold.admin.service.impl.AdminUserServiceImpl.AdminUserDetails;
@@ -19,7 +20,6 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * 权限授权过滤器：检查用户是否有访问特定API的权限
@@ -28,20 +28,6 @@ import java.util.Set;
 @Component
 @RequiredArgsConstructor
 public class PermissionAuthorizationFilter extends OncePerRequestFilter {
-
-    private static final Set<String> EXCLUDE_PATHS = Set.of(
-        "/health",
-        "/api/admin/auth/login",
-        "/api/admin/auth/captcha",
-        "/api/admin/auth/**",
-        "/swagger-ui/**",
-        "/swagger-ui.html",
-        "/api-docs",
-        "/v3/api-docs/**",
-        "/webjars/**",
-        "/openapi.json",
-        "/error"
-    );
 
     private final RBACService rbacService;
     private final ObjectMapper objectMapper;
@@ -85,13 +71,17 @@ public class PermissionAuthorizationFilter extends OncePerRequestFilter {
     }
 
     private boolean shouldSkipAuth(String path) {
-        return EXCLUDE_PATHS.stream().anyMatch(pattern -> {
+        for (String pattern : SecurityConstants.PUBLIC_PATHS) {
             if (pattern.endsWith("/**")) {
                 String prefix = pattern.substring(0, pattern.length() - 3);
-                return path.equals(prefix) || path.startsWith(prefix + "/");
+                if (path.equals(prefix) || path.startsWith(prefix + "/")) {
+                    return true;
+                }
+            } else if (path.startsWith(pattern)) {
+                return true;
             }
-            return path.startsWith(pattern);
-        });
+        }
+        return false;
     }
 
     private Long extractUserId(Authentication authentication) {
