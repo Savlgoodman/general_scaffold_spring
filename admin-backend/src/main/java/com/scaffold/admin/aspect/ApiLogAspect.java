@@ -43,6 +43,9 @@ public class ApiLogAspect {
         "/health"
     );
 
+    @org.springframework.beans.factory.annotation.Value("${app.log.store-response-body:false}")
+    private boolean storeResponseBody;
+
     private final LogWriteService logWriteService;
     private final ObjectMapper objectMapper;
 
@@ -95,7 +98,9 @@ public class ApiLogAspect {
         // 响应信息
         if (result instanceof R<?> r) {
             apiLog.setResponseCode(r.getCode());
-            apiLog.setResponseBody(truncate(toJson(result)));
+            if (storeResponseBody) {
+                apiLog.setResponseBody(truncate(toJson(result)));
+            }
         }
 
         logWriteService.writeApiLog(apiLog);

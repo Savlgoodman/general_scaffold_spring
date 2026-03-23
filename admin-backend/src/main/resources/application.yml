@@ -75,5 +75,10 @@ jwt:
 cors:
   allowed-origins: http://localhost:3000,http://localhost:5173
 
+app:
+  log:
+    store-response-body: false
+    api-log-retention-days: 30
+
 logging:
   config: classpath:logback-spring.xml
