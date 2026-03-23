@@ -85,7 +85,13 @@ public class PermissionAuthorizationFilter extends OncePerRequestFilter {
     }
 
     private boolean shouldSkipAuth(String path) {
-        return EXCLUDE_PATHS.stream().anyMatch(path::startsWith);
+        return EXCLUDE_PATHS.stream().anyMatch(pattern -> {
+            if (pattern.endsWith("/**")) {
+                String prefix = pattern.substring(0, pattern.length() - 3);
+                return path.equals(prefix) || path.startsWith(prefix + "/");
+            }
+            return path.startsWith(pattern);
+        });
     }
 
     private Long extractUserId(Authentication authentication) {

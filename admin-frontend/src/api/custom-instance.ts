@@ -5,7 +5,6 @@
  */
 import Axios, { AxiosRequestConfig, AxiosError, InternalAxiosRequestConfig } from 'axios'
 import { useAuthStore } from '@/store/auth'
-import { toast } from '@/hooks/use-toast'
 
 export const AXIOS_INSTANCE = Axios.create({
   baseURL: '',
@@ -46,12 +45,7 @@ function onRefreshFailed(error: unknown) {
 
 function handleLogoutWithToast() {
   useAuthStore.getState().logout()
-  toast({
-    title: '登录失效！',
-    description: '请重新登录',
-    variant: 'destructive',
-  })
-  window.location.href = '/login'
+  window.location.href = '/login?expired=1'
 }
 
 // 响应拦截器：401 自动刷新 token

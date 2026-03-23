@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -10,10 +10,13 @@ const authApi = getAuth()
 const { getCaptcha, login } = authApi
 import type { CaptchaVO } from '@/api/generated/model'
 import { useAuthStore } from '@/store/auth'
+import { useToast } from '@/hooks/use-toast'
 import { Shield } from 'lucide-react'
 
 export default function Login() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const { toast } = useToast()
   const { setLoginData, isAuthenticated } = useAuthStore()
   const [captcha, setCaptcha] = useState<CaptchaVO>({})
   const [loading, setLoading] = useState(false)
@@ -30,6 +33,17 @@ export default function Login() {
       navigate('/')
     }
   }, [isAuthenticated, navigate])
+
+  // Token 过期提示
+  useEffect(() => {
+    if (searchParams.get('expired') === '1') {
+      toast({
+        title: '登录失效！',
+        description: '请重新登录',
+        variant: 'destructive',
+      })
+    }
+  }, [searchParams, toast])
 
   // Fetch captcha on mount
   useEffect(() => {
