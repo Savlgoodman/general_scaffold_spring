@@ -21,6 +21,7 @@ import com.scaffold.admin.model.vo.UserVO;
 import com.scaffold.admin.security.JwtTokenProvider;
 import com.scaffold.admin.service.AuthService;
 import com.scaffold.admin.service.MenuService;
+import com.scaffold.admin.service.SystemConfigService;
 import com.scaffold.admin.util.AuthCaptchaUtil;
 import com.scaffold.admin.util.IpUtils;
 import jakarta.servlet.http.HttpServletRequest;
@@ -48,8 +49,8 @@ import java.util.concurrent.TimeUnit;
 @RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
 
-    private static final int MAX_LOGIN_FAIL_COUNT = 5;
-    private static final long LOCK_DURATION = 15; // 锁定15分钟
+    private static final int DEFAULT_MAX_LOGIN_FAIL_COUNT = 5;
+    private static final long DEFAULT_LOCK_DURATION = 30; // 默认锁定30分钟
     private static final long ONLINE_SESSION_TTL = 6; // 在线会话TTL（分钟）
 
     private final AdminUserMapper adminUserMapper;
@@ -59,6 +60,7 @@ public class AuthServiceImpl implements AuthService {
     private final RedisTemplate<String, Object> redisTemplate;
     private final HttpServletRequest httpServletRequest;
     private final MenuService menuService;
+    private final SystemConfigService systemConfigService;
 
     @Override
     public CaptchaVO generateCaptcha() {
@@ -266,6 +268,22 @@ public class AuthServiceImpl implements AuthService {
         }
     }
 
+    private int getMaxLoginFailCount() {
+        String val = systemConfigService.getConfigValue("login_max_retry");
+        if (val != null) {
+            try { return Integer.parseInt(val); } catch (NumberFormatException ignored) {}
+        }
+        return DEFAULT_MAX_LOGIN_FAIL_COUNT;
+    }
+
+    private long getLockDuration() {
+        String val = systemConfigService.getConfigValue("login_lock_duration");
+        if (val != null) {
+            try { return Long.parseLong(val); } catch (NumberFormatException ignored) {}
+        }
+        return DEFAULT_LOCK_DURATION;
+    }
+
     /**
      * 检查账户是否被锁定
      */
@@ -274,9 +292,10 @@ public class AuthServiceImpl implements AuthService {
         Object failCount = redisTemplate.opsForValue().get(key);
         if (failCount != null) {
             int count = Integer.parseInt(failCount.toString());
-            if (count >= MAX_LOGIN_FAIL_COUNT) {
+            if (count >= getMaxLoginFailCount()) {
+                long lockMin = getLockDuration();
                 throw new BusinessException(ResultCode.ACCOUNT_LOCKED,
-                        "登录失败次数过多，账户已被锁定" + LOCK_DURATION + "分钟");
+                        "登录失败次数过多，账户已被锁定" + lockMin + "分钟");
             }
         }
     }
@@ -289,7 +308,7 @@ public class AuthServiceImpl implements AuthService {
         Long count = redisTemplate.opsForValue().increment(key);
         if (count != null && count == 1) {
             // 首次失败，设置过期时间
-            redisTemplate.expire(key, LOCK_DURATION, TimeUnit.MINUTES);
+            redisTemplate.expire(key, getLockDuration(), TimeUnit.MINUTES);
         }
         log.debug("用户 {} 登录失败次数: {}", username, count);
     }
