@@ -7,26 +7,14 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Checkbox } from '@/components/ui/checkbox'
 import { useToast } from '@/hooks/use-toast'
-import {
-  ChevronDown, ChevronRight, FolderOpen,
-  LayoutDashboard, Users, Shield, Menu, Key, FileText, LogIn,
-  AlertCircle, Settings, Globe, Home, Database, Bell, BookOpen, Folder,
-  type LucideIcon,
-} from 'lucide-react'
+import { ChevronDown, ChevronRight, FolderOpen } from 'lucide-react'
+import { getIcon } from '@/lib/icon-map'
 import { getRoles } from '@/api/generated/roles/roles'
 import type { RoleMenuVO, RoleMenuVOGroup } from '@/api/generated/model'
 
 const rolesApi = getRoles()
 
-const iconMap: Record<string, LucideIcon> = {
-  LayoutDashboard, Users, Shield, Menu, Key, FileText, LogIn,
-  AlertCircle, Settings, Globe, Home, Database, Bell, BookOpen, Folder,
-}
-
-function getIcon(iconName?: string): LucideIcon {
-  if (!iconName) return Folder
-  return iconMap[iconName] ?? Folder
-}
+// getIcon 从 @/lib/icon-map 导入
 
 interface Props {
   open: boolean

@@ -8,10 +8,8 @@ import { Badge } from '@/components/ui/badge'
 import { useToast } from '@/hooks/use-toast'
 import {
   ChevronDown, ChevronRight, FolderOpen, CircleCheck, CircleX, CircleMinus,
-  LayoutDashboard, Users, Shield, Menu, Key, FileText, LogIn,
-  AlertCircle, Settings, Globe, Home, Database, Bell, BookOpen, Folder,
-  type LucideIcon,
 } from 'lucide-react'
+import { getIcon } from '@/lib/icon-map'
 import { getAdminUsersPermission } from '@/api/generated/admin-users-permission/admin-users-permission'
 import type {
   UserMenuOverviewVO, UserMenuOverviewVOGroup, UserMenuOverviewVOItem,
@@ -20,14 +18,7 @@ import type {
 
 const permApi = getAdminUsersPermission()
 
-const iconMap: Record<string, LucideIcon> = {
-  LayoutDashboard, Users, Shield, Menu, Key, FileText, LogIn,
-  AlertCircle, Settings, Globe, Home, Database, Bell, BookOpen, Folder,
-}
-function getIcon(name?: string): LucideIcon {
-  if (!name) return Folder
-  return iconMap[name] ?? Folder
-}
+// getIcon 从 @/lib/icon-map 导入
 
 const SOURCE_LABELS: Record<string, { label: string; cls: string }> = {
   SUPER_USER: { label: '超管', cls: 'bg-violet-500' },

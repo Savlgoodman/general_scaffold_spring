@@ -1,24 +1,8 @@
 import { Link, useLocation } from "react-router-dom"
-import { type LucideIcon } from "lucide-react"
-import {
-  LayoutDashboard,
-  Users,
-  Shield,
-  Menu,
-  Key,
-  FileText,
-  LogIn,
-  AlertCircle,
-  Settings,
-  Globe,
-  Home,
-  Database,
-  Bell,
-  BookOpen,
-  Folder,
-} from "lucide-react"
+import { LayoutDashboard, Settings } from "lucide-react"
 import { useAuthStore } from "@/store/auth"
 import { appRoutes } from "@/routes"
+import { getIcon } from "@/lib/icon-map"
 
 import {
   Sidebar,
@@ -36,29 +20,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar"
 
-// icon 字符串 → lucide-react 组件映射
-const iconMap: Record<string, LucideIcon> = {
-  LayoutDashboard,
-  Users,
-  Shield,
-  Menu,
-  Key,
-  FileText,
-  LogIn,
-  AlertCircle,
-  Settings,
-  Globe,
-  Home,
-  Database,
-  Bell,
-  BookOpen,
-  Folder,
-}
-
-function getIcon(iconName?: string): LucideIcon {
-  if (!iconName) return Folder
-  return iconMap[iconName] ?? Folder
-}
+// getIcon 和 iconMap 从 @/lib/icon-map 导入
 
 function AppSidebar() {
   const location = useLocation()

@@ -14,11 +14,9 @@ import {
 import { useToast } from '@/hooks/use-toast'
 import {
   Plus, Pencil, Trash2, RefreshCw, ChevronRight, ChevronDown,
-  FolderOpen, FileText, GripVertical,
-  LayoutDashboard, Users, Shield, Menu, Key,
-  LogIn, AlertCircle, Settings, Globe, Home, Database, Bell, BookOpen, Folder,
-  type LucideIcon,
+  FolderOpen, GripVertical,
 } from 'lucide-react'
+import { iconMap, iconOptions, getIcon } from '@/lib/icon-map'
 import {
   DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors,
   type DragEndEvent,
@@ -32,16 +30,7 @@ import type { MenuVO } from '@/api/generated/model'
 
 const menusApi = getMenus()
 
-const iconMap: Record<string, LucideIcon> = {
-  LayoutDashboard, Users, Shield, Menu, Key, FileText: FileText,
-  LogIn, AlertCircle, Settings, Globe, Home, Database, Bell, BookOpen, Folder,
-}
-const iconOptions = Object.keys(iconMap)
-
-function getIcon(iconName?: string): LucideIcon {
-  if (!iconName) return Folder
-  return iconMap[iconName] ?? Folder
-}
+// iconMap, iconOptions, getIcon 从 @/lib/icon-map 导入
 
 const TYPE_LABELS: Record<string, string> = {
   directory: '目录', menu: '菜单', button: '按钮',
