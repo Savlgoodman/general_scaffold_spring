@@ -28,6 +28,8 @@ import {
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { getNotices } from "@/api/generated/notices/notices"
 import type { AdminNotice } from "@/api/generated/model"
+import ReactMarkdown from "react-markdown"
+import remarkGfm from "remark-gfm"
 import {
   ChartContainer,
   ChartTooltip,
@@ -192,7 +194,9 @@ function NoticeBoard() {
               <Badge variant="outline">{detail?.type === 'announcement' ? '公告' : '通知'}</Badge>
               <span>{detail?.publishTime?.replace('T', ' ').substring(0, 19)}</span>
             </div>
-            <div className="text-sm whitespace-pre-wrap leading-relaxed">{detail?.content}</div>
+            <div className="prose prose-sm max-w-none dark:prose-invert">
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>{detail?.content ?? ''}</ReactMarkdown>
+            </div>
           </div>
         </DialogContent>
       </Dialog>

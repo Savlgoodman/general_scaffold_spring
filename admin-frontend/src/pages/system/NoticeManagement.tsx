@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, lazy, Suspense } from 'react'
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table'
@@ -19,6 +19,10 @@ import { Plus, Search, RefreshCw, Pencil, Trash2, Send, Undo2, Pin } from 'lucid
 import { getNotices } from '@/api/generated/notices/notices'
 import type { AdminNotice } from '@/api/generated/model'
 import { TableSkeleton } from '@/components/skeletons'
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
+
+const MDEditor = lazy(() => import('@uiw/react-md-editor'))
 
 const noticesApi = getNotices()
 
@@ -94,7 +98,7 @@ export default function NoticeManagement() {
 
   const handleSubmit = async () => {
     if (!form.title.trim()) { toast({ title: '请填写标题', variant: 'destructive' }); return }
-    if (!form.content.trim()) { toast({ title: '请填写内容', variant: 'destructive' }); return }
+    if (form.type === 'announcement' && !form.content.trim()) { toast({ title: '公告内容不能为空', variant: 'destructive' }); return }
     setFormLoading(true)
     try {
       if (editingId) {
@@ -264,27 +268,54 @@ export default function NoticeManagement() {
       </Card>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="sm:max-w-lg">
-          <DialogHeader><DialogTitle>{dialogTitle}</DialogTitle><DialogDescription>{editingId ? '修改公告内容' : '创建新的通知公告'}</DialogDescription></DialogHeader>
+        <DialogContent className={form.type === 'announcement' ? 'sm:max-w-3xl' : 'sm:max-w-lg'}>
+          <DialogHeader>
+            <DialogTitle>{dialogTitle}</DialogTitle>
+            <DialogDescription>
+              {form.type === 'notice' ? '通知仅在 Header 轮播展示标题' : editingId ? '修改公告内容（支持 Markdown）' : '创建新公告（支持 Markdown）'}
+            </DialogDescription>
+          </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
-              <Label>标题 <span className="text-destructive">*</span></Label>
-              <Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="请输入公告标题" />
-            </div>
-            <div className="grid gap-2">
               <Label>类型</Label>
-              <Select value={form.type} onValueChange={(v) => setForm({ ...form, type: v })}>
+              <Select value={form.type} onValueChange={(v) => setForm({ ...form, type: v, content: '' })}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="notice">通知</SelectItem>
-                  <SelectItem value="announcement">公告</SelectItem>
+                  <SelectItem value="notice">通知（Header 轮播）</SelectItem>
+                  <SelectItem value="announcement">公告（Dashboard 展示）</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div className="grid gap-2">
-              <Label>内容 <span className="text-destructive">*</span></Label>
-              <Textarea value={form.content} onChange={(e) => setForm({ ...form, content: e.target.value })} placeholder="请输入公告内容" rows={6} />
+              <Label>标题 <span className="text-destructive">*</span></Label>
+              <Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder={form.type === 'notice' ? '通知标题（将在 Header 轮播展示）' : '公告标题'} />
             </div>
+            {form.type === 'notice' ? (
+              <div className="grid gap-2">
+                <Label>内容 <span className="text-muted-foreground text-xs">（选填，不超过 60 字）</span></Label>
+                <Input
+                  value={form.content}
+                  onChange={(e) => { if (e.target.value.length <= 60) setForm({ ...form, content: e.target.value }) }}
+                  placeholder="可选填写简短说明"
+                  maxLength={60}
+                />
+                <span className="text-xs text-muted-foreground text-right">{form.content.length}/60</span>
+              </div>
+            ) : (
+              <div className="grid gap-2">
+                <Label>内容 <span className="text-destructive">*</span></Label>
+                <Suspense fallback={<div className="h-64 bg-muted rounded animate-pulse" />}>
+                  <div data-color-mode="light">
+                    <MDEditor
+                      value={form.content}
+                      onChange={(v) => setForm({ ...form, content: v || '' })}
+                      height={300}
+                      preview="edit"
+                    />
+                  </div>
+                </Suspense>
+              </div>
+            )}
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDialogOpen(false)}>取消</Button>

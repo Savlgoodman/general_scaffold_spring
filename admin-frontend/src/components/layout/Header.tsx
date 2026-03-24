@@ -31,7 +31,7 @@ function NoticeMarquee() {
   const [currentIndex, setCurrentIndex] = useState(0)
 
   useEffect(() => {
-    noticesApi.listNotices({ pageNum: 1, pageSize: 5, status: 'published', type: 'notice' })
+    noticesApi.listNotices({ pageNum: 1, pageSize: 10, status: 'published', type: 'notice' })
       .then(res => {
         if (res.code === 200 && res.data?.records) {
           setNotices(res.data.records)
@@ -42,24 +42,29 @@ function NoticeMarquee() {
 
   useEffect(() => {
     if (notices.length <= 1) return
-    const timer = setInterval(() => {
+    const current = notices[currentIndex]
+    const delay = current?.isTop === 1 ? 10000 : 5000
+    const timer = setTimeout(() => {
       setCurrentIndex(i => (i + 1) % notices.length)
-    }, 5000)
-    return () => clearInterval(timer)
-  }, [notices.length])
+    }, delay)
+    return () => clearTimeout(timer)
+  }, [notices, currentIndex])
 
   if (notices.length === 0) return null
 
+  const current = notices[currentIndex]
+  const isTop = current?.isTop === 1
+
   return (
-    <div className="flex items-center gap-2 px-3 py-1 bg-primary/5 rounded-md max-w-sm">
-      <Megaphone className="w-3.5 h-3.5 text-primary shrink-0" />
+    <div className={`flex items-center gap-2 px-3 py-1 rounded-md max-w-sm ${isTop ? 'bg-red-500/10' : 'bg-primary/5'}`}>
+      <Megaphone className={`w-3.5 h-3.5 shrink-0 ${isTop ? 'text-red-500' : 'text-primary'}`} />
       <div className="overflow-hidden h-5 flex-1">
         <div
           key={currentIndex}
-          className="text-xs text-muted-foreground truncate leading-5"
+          className={`text-xs truncate leading-5 ${isTop ? 'text-red-600 font-medium' : 'text-muted-foreground'}`}
           style={{ animation: 'notice-slide-in 0.4s ease-out' }}
         >
-          {notices[currentIndex]?.title}
+          {current?.title}
         </div>
       </div>
       <style>{`

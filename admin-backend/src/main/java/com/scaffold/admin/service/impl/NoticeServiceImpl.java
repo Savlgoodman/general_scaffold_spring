@@ -54,10 +54,14 @@ public class NoticeServiceImpl implements NoticeService {
     @Transactional
     @OperationLog(module = "通知公告", type = OperationType.CREATE)
     public AdminNotice create(CreateNoticeDTO dto) {
+        String type = dto.getType() != null ? dto.getType() : "notice";
+        if ("announcement".equals(type) && (dto.getContent() == null || dto.getContent().isBlank())) {
+            throw new BusinessException(ResultCode.PARAM_ERROR, "公告内容不能为空");
+        }
         AdminNotice notice = new AdminNotice();
         notice.setTitle(dto.getTitle());
         notice.setContent(dto.getContent());
-        notice.setType(dto.getType() != null ? dto.getType() : "notice");
+        notice.setType(type);
         notice.setStatus("draft");
         notice.setIsTop(0);
         noticeMapper.insert(notice);

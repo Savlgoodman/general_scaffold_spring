@@ -12,8 +12,7 @@ public class CreateNoticeDTO {
     @NotBlank(message = "标题不能为空")
     private String title;
 
-    @Schema(description = "公告内容", example = "系统将于今晚22:00进行维护升级...")
-    @NotBlank(message = "内容不能为空")
+    @Schema(description = "公告内容（通知类型选填，公告类型必填）", example = "系统将于今晚22:00进行维护升级...")
     private String content;
 
     @Schema(description = "公告类型（notice-公告 announcement-通告）", example = "notice")
