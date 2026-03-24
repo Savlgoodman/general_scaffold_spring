@@ -39,7 +39,7 @@ export default function Profile() {
     }
   }, [user])
 
-  const displayName = user?.username || user?.nickname || 'User'
+  const displayName = user?.nickname || user?.username || 'User'
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]

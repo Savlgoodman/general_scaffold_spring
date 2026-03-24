@@ -30,8 +30,9 @@ export default function ProtectedRoute() {
     return <Outlet />
   }
 
-  // 根路径始终允许
-  if (location.pathname === '/') {
+  // 白名单路由：所有登录用户均可访问
+  const publicPaths = ['/', '/profile']
+  if (publicPaths.includes(location.pathname)) {
     return <Outlet />
   }
 

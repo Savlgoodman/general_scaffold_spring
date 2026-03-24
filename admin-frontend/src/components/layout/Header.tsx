@@ -99,7 +99,7 @@ function Header() {
   }
 
   // 获取用户显示名
-  const displayName = user?.username || user?.nickname || 'Admin'
+  const displayName = user?.nickname || user?.username || 'Admin'
 
   return (
     <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
