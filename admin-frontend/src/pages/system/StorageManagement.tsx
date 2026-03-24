@@ -8,12 +8,17 @@ import { Input } from '@/components/ui/input'
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
 } from '@/components/ui/dialog'
+import { Badge } from '@/components/ui/badge'
+import { Separator } from '@/components/ui/separator'
 import { useToast } from '@/hooks/use-toast'
-import { Upload, RefreshCw, Trash2, Eye, FolderOpen } from 'lucide-react'
+import { Upload, RefreshCw, Trash2, Eye, FolderOpen, FileText, Image, Copy, ExternalLink } from 'lucide-react'
 import { getFiles } from '@/api/generated/files/files'
 import type { BucketFileVO } from '@/api/generated/model'
 import { AXIOS_INSTANCE } from '@/api/custom-instance'
 import { TableSkeleton } from '@/components/skeletons'
+
+// 后端 BucketFileVO 含 url 字段，但 generated 类型未更新，扩展补齐
+type FileVO = BucketFileVO & { url?: string }
 
 const filesApi = getFiles()
 
@@ -28,16 +33,34 @@ function isImage(name: string): boolean {
   return /\.(jpg|jpeg|png|gif|webp|svg|bmp)$/i.test(name)
 }
 
+function getFileExtension(name: string): string {
+  const ext = name.split('.').pop()?.toUpperCase()
+  return ext || '未知'
+}
+
+function getMimeCategory(contentType?: string): string {
+  if (!contentType) return '未知'
+  if (contentType.startsWith('image/')) return '图片'
+  if (contentType.startsWith('video/')) return '视频'
+  if (contentType.startsWith('audio/')) return '音频'
+  if (contentType.startsWith('text/')) return '文本'
+  if (contentType.includes('pdf')) return 'PDF'
+  if (contentType.includes('zip') || contentType.includes('rar') || contentType.includes('tar')) return '压缩包'
+  if (contentType.includes('json') || contentType.includes('xml')) return '数据文件'
+  return '其他'
+}
+
 export default function StorageManagement() {
   const { toast } = useToast()
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const [files, setFiles] = useState<BucketFileVO[]>([])
+  const [files, setFiles] = useState<FileVO[]>([])
   const [loading, setLoading] = useState(false)
   const [prefix, setPrefix] = useState('')
   const [uploading, setUploading] = useState(false)
 
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
-  const [deleteTarget, setDeleteTarget] = useState<BucketFileVO | null>(null)
+  const [detailFile, setDetailFile] = useState<FileVO | null>(null)
+  const [imgDimensions, setImgDimensions] = useState<{ w: number; h: number } | null>(null)
+  const [deleteTarget, setDeleteTarget] = useState<FileVO | null>(null)
   const [deleting, setDeleting] = useState(false)
 
   const fetchFiles = useCallback(async () => {
@@ -45,7 +68,7 @@ export default function StorageManagement() {
     try {
       const res = await filesApi.listFiles({ prefix: prefix || undefined })
       if (res.code === 200 && res.data) {
-        setFiles(res.data)
+        setFiles(res.data as FileVO[])
       }
     } catch {
       toast({ title: '获取文件列表失败', variant: 'destructive' })
@@ -100,6 +123,23 @@ export default function StorageManagement() {
       setDeleting(false)
     }
   }
+
+  const openDetail = (f: FileVO) => {
+    setImgDimensions(null)
+    setDetailFile(f)
+  }
+
+  const handleImageLoad = (e: React.SyntheticEvent<HTMLImageElement>) => {
+    const img = e.currentTarget
+    setImgDimensions({ w: img.naturalWidth, h: img.naturalHeight })
+  }
+
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text)
+    toast({ title: '已复制到剪贴板' })
+  }
+
+  const isDetailImage = detailFile ? isImage(detailFile.fileName || '') && !!detailFile.url : false
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
@@ -158,11 +198,9 @@ export default function StorageManagement() {
                     <TableCell className="text-center py-2.5 text-sm">{f.lastModified?.replace('T', ' ').substring(0, 19) || '-'}</TableCell>
                     <TableCell className="text-center py-2.5">
                       <div className="flex justify-center gap-1">
-                        {isImage(f.fileName || '') && (f as any).url && (
-                          <Button variant="ghost" size="icon" className="h-7 w-7" title="预览" onClick={() => setPreviewUrl((f as any).url)}>
-                            <Eye className="w-3.5 h-3.5" />
-                          </Button>
-                        )}
+                        <Button variant="ghost" size="icon" className="h-7 w-7" title="查看详情" onClick={() => openDetail(f)}>
+                          <Eye className="w-3.5 h-3.5" />
+                        </Button>
                         <Button variant="ghost" size="icon" className="h-7 w-7" title="删除" onClick={() => setDeleteTarget(f)}>
                           <Trash2 className="w-3.5 h-3.5 text-destructive" />
                         </Button>
@@ -179,11 +217,95 @@ export default function StorageManagement() {
         </CardContent>
       </Card>
 
-      {/* ��片预览 */}
-      <Dialog open={!!previewUrl} onOpenChange={() => setPreviewUrl(null)}>
-        <DialogContent className="sm:max-w-2xl">
-          <DialogHeader><DialogTitle>图片预览</DialogTitle></DialogHeader>
-          {previewUrl && <img src={previewUrl} alt="预览" className="w-full rounded" />}
+      {/* 文件详情弹窗 */}
+      <Dialog open={!!detailFile} onOpenChange={() => setDetailFile(null)}>
+        <DialogContent className={isDetailImage ? 'sm:max-w-2xl' : 'sm:max-w-md'}>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              {isDetailImage
+                ? <Image className="w-4 h-4 text-muted-foreground" />
+                : <FileText className="w-4 h-4 text-muted-foreground" />
+              }
+              文件详情
+            </DialogTitle>
+          </DialogHeader>
+
+          {detailFile && (
+            <div className="space-y-4">
+              {/* 图片预览区域 */}
+              {isDetailImage && detailFile.url && (
+                <div className="flex justify-center bg-muted/30 rounded-lg p-4">
+                  <img
+                    src={detailFile.url}
+                    alt={detailFile.fileName}
+                    className="max-h-80 max-w-full rounded object-contain"
+                    onLoad={handleImageLoad}
+                  />
+                </div>
+              )}
+
+              <Separator />
+
+              {/* 文件信息 */}
+              <div className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2.5 text-sm">
+                <span className="text-muted-foreground whitespace-nowrap">文件名</span>
+                <span className="font-medium truncate" title={detailFile.fileName}>{detailFile.fileName}</span>
+
+                <span className="text-muted-foreground whitespace-nowrap">存储路径</span>
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <span className="font-mono text-xs truncate" title={detailFile.objectName}>{detailFile.objectName}</span>
+                  {detailFile.objectName && (
+                    <Button variant="ghost" size="icon" className="h-5 w-5 shrink-0" onClick={() => copyToClipboard(detailFile.objectName!)}>
+                      <Copy className="w-3 h-3" />
+                    </Button>
+                  )}
+                </div>
+
+                <span className="text-muted-foreground whitespace-nowrap">文件大小</span>
+                <span>{formatSize(detailFile.size)}</span>
+
+                <span className="text-muted-foreground whitespace-nowrap">文件类型</span>
+                <div className="flex items-center gap-2">
+                  <span>{getFileExtension(detailFile.fileName || '')}</span>
+                  <span className="inline-flex">
+                    <Badge variant="secondary" className="text-xs">
+                      {getMimeCategory(detailFile.contentType)}
+                    </Badge>
+                  </span>
+                </div>
+
+                <span className="text-muted-foreground whitespace-nowrap">MIME</span>
+                <span className="font-mono text-xs">{detailFile.contentType || '-'}</span>
+
+                {isDetailImage && imgDimensions && (
+                  <>
+                    <span className="text-muted-foreground whitespace-nowrap">图片尺寸</span>
+                    <span>{imgDimensions.w} x {imgDimensions.h} px</span>
+                  </>
+                )}
+
+                <span className="text-muted-foreground whitespace-nowrap">修改时间</span>
+                <span>{detailFile.lastModified?.replace('T', ' ').substring(0, 19) || '-'}</span>
+              </div>
+
+              {/* 操作按钮 */}
+              {detailFile.url && (
+                <>
+                  <Separator />
+                  <div className="flex gap-2">
+                    <Button variant="outline" size="sm" className="flex-1" onClick={() => copyToClipboard(detailFile.url!)}>
+                      <Copy className="w-3.5 h-3.5 mr-1.5" />复制链接
+                    </Button>
+                    <Button variant="outline" size="sm" className="flex-1" asChild>
+                      <a href={detailFile.url} target="_blank" rel="noopener noreferrer">
+                        <ExternalLink className="w-3.5 h-3.5 mr-1.5" />新窗口打开
+                      </a>
+                    </Button>
+                  </div>
+                </>
+              )}
+            </div>
+          )}
         </DialogContent>
       </Dialog>
 
