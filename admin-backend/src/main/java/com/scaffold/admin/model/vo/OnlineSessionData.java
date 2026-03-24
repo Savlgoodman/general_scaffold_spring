@@ -17,6 +17,7 @@ public class OnlineSessionData {
     private Long userId;
     private String username;
     private String nickname;
+    private String avatar;
     private String loginIp;
     private String userAgent;
     private LocalDateTime loginTime;

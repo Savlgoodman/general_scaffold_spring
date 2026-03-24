@@ -19,6 +19,7 @@ public final class SecurityConstants {
         "/v3/api-docs/**",
         "/webjars/**",
         "/openapi.json",
-        "/error"
+        "/error",
+        "/api/admin/system-config/public"
     };
 }

@@ -21,6 +21,9 @@ public class OnlineUserVO {
     @Schema(description = "昵称")
     private String nickname;
 
+    @Schema(description = "头像URL")
+    private String avatar;
+
     @Schema(description = "登录IP")
     private String loginIp;
 

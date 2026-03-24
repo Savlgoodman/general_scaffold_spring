@@ -359,6 +359,7 @@ public class AuthServiceImpl implements AuthService {
         session.setUserId(user.getId());
         session.setUsername(user.getUsername());
         session.setNickname(user.getNickname());
+        session.setAvatar(user.getAvatar());
         session.setLoginIp(ip);
         session.setUserAgent(userAgent);
         session.setLoginTime(LocalDateTime.now());
@@ -381,6 +382,7 @@ public class AuthServiceImpl implements AuthService {
             session = existingSession;
             session.setLastActiveTime(LocalDateTime.now());
             session.setAccessToken(newAccessToken);
+            session.setAvatar(user.getAvatar());
         } else {
             // 会话已过期，重新创建
             String ip = IpUtils.getClientIp(httpServletRequest);
@@ -389,6 +391,7 @@ public class AuthServiceImpl implements AuthService {
             session.setUserId(user.getId());
             session.setUsername(user.getUsername());
             session.setNickname(user.getNickname());
+            session.setAvatar(user.getAvatar());
             session.setLoginIp(ip);
             session.setUserAgent(userAgent);
             session.setLoginTime(LocalDateTime.now());
