@@ -3,6 +3,7 @@ package com.scaffold.admin.config;
 import io.minio.BucketExistsArgs;
 import io.minio.MakeBucketArgs;
 import io.minio.MinioClient;
+import io.minio.SetBucketPolicyArgs;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -31,15 +32,34 @@ public class MinIOConfig {
                 .credentials(accessKey, secretKey)
                 .build();
 
-        // 启动时检查/创建默认 bucket
         try {
             boolean exists = client.bucketExists(BucketExistsArgs.builder().bucket(bucketName).build());
             if (!exists) {
                 client.makeBucket(MakeBucketArgs.builder().bucket(bucketName).build());
                 log.info("MinIO 默认桶 '{}' 创建成功", bucketName);
             }
+            // 设置桶策略为公开读，使上传的文件可通过 URL 直接访问
+            String policy = """
+                {
+                  "Version": "2012-10-17",
+                  "Statement": [
+                    {
+                      "Effect": "Allow",
+                      "Principal": {"AWS": ["*"]},
+                      "Action": ["s3:GetObject"],
+                      "Resource": ["arn:aws:s3:::%s/*"]
+                    }
+                  ]
+                }
+                """.formatted(bucketName);
+            client.setBucketPolicy(
+                SetBucketPolicyArgs.builder()
+                    .bucket(bucketName)
+                    .config(policy)
+                    .build()
+            );
         } catch (Exception e) {
-            log.warn("MinIO 初始化检查桶失败: {}", e.getMessage());
+            log.warn("MinIO 初始化失败: {}", e.getMessage());
         }
 
         return client;

@@ -4,12 +4,12 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { Separator } from '@/components/ui/separator'
 import { useToast } from '@/hooks/use-toast'
 import { Camera, Save } from 'lucide-react'
 import { useAuthStore } from '@/store/auth'
 import { getAdminUsers } from '@/api/generated/admin-users/admin-users'
 import { AXIOS_INSTANCE } from '@/api/custom-instance'
+import AvatarCropDialog from '@/components/AvatarCropDialog'
 
 const usersApi = getAdminUsers()
 
@@ -20,12 +20,12 @@ export default function Profile() {
 
   const [nickname, setNickname] = useState(user?.nickname || '')
   const [email, setEmail] = useState(user?.email || '')
-  const [phone, setPhone] = useState(user?.phone || '')
+  const [phone, setPhone] = useState((user as any)?.phone || '')
   const [avatarUrl, setAvatarUrl] = useState(user?.avatar || '')
   const [uploading, setUploading] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [cropSrc, setCropSrc] = useState<string | null>(null)
 
-  const [oldPassword, setOldPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [changingPwd, setChangingPwd] = useState(false)
@@ -34,26 +34,31 @@ export default function Profile() {
     if (user) {
       setNickname(user.nickname || '')
       setEmail(user.email || '')
-      setPhone(user.phone || '')
+      setPhone((user as any).phone || '')
       setAvatarUrl(user.avatar || '')
     }
   }, [user])
 
   const displayName = user?.username || user?.nickname || 'User'
 
-  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
-
-    if (file.size > 2 * 1024 * 1024) {
-      toast({ title: '头像大小不能超过2MB', variant: 'destructive' })
+    if (file.size > 5 * 1024 * 1024) {
+      toast({ title: '图片不能超过5MB', variant: 'destructive' })
       return
     }
+    const reader = new FileReader()
+    reader.onload = () => setCropSrc(reader.result as string)
+    reader.readAsDataURL(file)
+    if (fileInputRef.current) fileInputRef.current.value = ''
+  }
 
+  const handleCropComplete = async (blob: Blob) => {
     setUploading(true)
     try {
       const formData = new FormData()
-      formData.append('file', file)
+      formData.append('file', blob, 'avatar.png')
       const res = await AXIOS_INSTANCE.post('/api/admin/auth/avatar', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       })
@@ -70,7 +75,6 @@ export default function Profile() {
       toast({ title: '上传失败', variant: 'destructive' })
     } finally {
       setUploading(false)
-      if (fileInputRef.current) fileInputRef.current.value = ''
     }
   }
 
@@ -82,10 +86,10 @@ export default function Profile() {
         nickname: nickname || undefined,
         email: email || undefined,
         phone: phone || undefined,
-      })
+      } as any)
       if (res.code === 200) {
         if (user) {
-          setUser({ ...user, nickname, email, phone })
+          setUser({ ...user, nickname, email } as any)
         }
         toast({ title: '保存成功' })
       } else {
@@ -109,7 +113,6 @@ export default function Profile() {
       const res = await usersApi.updateUser(user.id, { password: newPassword })
       if (res.code === 200) {
         toast({ title: '密码修改成功' })
-        setOldPassword('')
         setNewPassword('')
         setConfirmPassword('')
       } else {
@@ -144,7 +147,7 @@ export default function Profile() {
               <div className="absolute inset-0 rounded-full bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                 <Camera className="w-6 h-6 text-white" />
               </div>
-              <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/gif,image/webp" className="hidden" onChange={handleAvatarUpload} />
+              <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/gif,image/webp" className="hidden" onChange={handleFileSelect} />
             </div>
             <div className="space-y-1">
               <p className="font-medium">{displayName}</p>
@@ -198,6 +201,16 @@ export default function Profile() {
           </Button>
         </CardContent>
       </Card>
+
+      {/* 头像裁剪弹窗 */}
+      {cropSrc && (
+        <AvatarCropDialog
+          open={!!cropSrc}
+          onOpenChange={(open) => { if (!open) setCropSrc(null) }}
+          imageSrc={cropSrc}
+          onCropComplete={handleCropComplete}
+        />
+      )}
     </div>
   )
 }

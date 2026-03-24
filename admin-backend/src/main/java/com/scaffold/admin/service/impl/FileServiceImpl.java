@@ -104,6 +104,7 @@ public class FileServiceImpl implements FileService {
                     vo.setLastModified(LocalDateTime.ofInstant(
                         item.lastModified().toInstant(), ZoneId.systemDefault()));
                 }
+                vo.setUrl(endpoint + "/" + bucketName + "/" + item.objectName());
                 list.add(vo);
             }
         } catch (Exception e) {
@@ -132,7 +133,9 @@ public class FileServiceImpl implements FileService {
             ext = originalName.substring(originalName.lastIndexOf("."));
         }
         String datePath = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
-        String objectName = directory + "/" + datePath + "/" + UUID.randomUUID() + ext;
+        // 文件名格式：{目录}/{日期}/{分类前缀}-{uuid}.{ext}
+        String prefix = directory.endsWith("s") ? directory.substring(0, directory.length() - 1) : directory;
+        String objectName = directory + "/" + datePath + "/" + prefix + "-" + UUID.randomUUID() + ext;
 
         try (InputStream is = file.getInputStream()) {
             minioClient.putObject(

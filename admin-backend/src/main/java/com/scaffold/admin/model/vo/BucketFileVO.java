@@ -23,4 +23,7 @@ public class BucketFileVO {
 
     @Schema(description = "最后修改时间")
     private LocalDateTime lastModified;
+
+    @Schema(description = "访问URL")
+    private String url;
 }

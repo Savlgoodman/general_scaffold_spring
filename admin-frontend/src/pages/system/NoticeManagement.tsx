@@ -6,7 +6,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select'
@@ -19,8 +18,6 @@ import { Plus, Search, RefreshCw, Pencil, Trash2, Send, Undo2, Pin } from 'lucid
 import { getNotices } from '@/api/generated/notices/notices'
 import type { AdminNotice } from '@/api/generated/model'
 import { TableSkeleton } from '@/components/skeletons'
-import ReactMarkdown from 'react-markdown'
-import remarkGfm from 'remark-gfm'
 
 const MDEditor = lazy(() => import('@uiw/react-md-editor'))
 

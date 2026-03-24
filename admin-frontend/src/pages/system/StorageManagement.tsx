@@ -8,9 +8,8 @@ import { Input } from '@/components/ui/input'
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
 } from '@/components/ui/dialog'
-import { Badge } from '@/components/ui/badge'
 import { useToast } from '@/hooks/use-toast'
-import { Upload, RefreshCw, Trash2, Eye, Search, FolderOpen } from 'lucide-react'
+import { Upload, RefreshCw, Trash2, Eye, FolderOpen } from 'lucide-react'
 import { getFiles } from '@/api/generated/files/files'
 import type { BucketFileVO } from '@/api/generated/model'
 import { AXIOS_INSTANCE } from '@/api/custom-instance'
@@ -159,8 +158,8 @@ export default function StorageManagement() {
                     <TableCell className="text-center py-2.5 text-sm">{f.lastModified?.replace('T', ' ').substring(0, 19) || '-'}</TableCell>
                     <TableCell className="text-center py-2.5">
                       <div className="flex justify-center gap-1">
-                        {isImage(f.fileName || '') && (
-                          <Button variant="ghost" size="icon" className="h-7 w-7" title="预览" onClick={() => setPreviewUrl(`/api/admin/files/preview?objectName=${encodeURIComponent(f.objectName || '')}`)}>
+                        {isImage(f.fileName || '') && (f as any).url && (
+                          <Button variant="ghost" size="icon" className="h-7 w-7" title="预览" onClick={() => setPreviewUrl((f as any).url)}>
                             <Eye className="w-3.5 h-3.5" />
                           </Button>
                         )}
