@@ -139,6 +139,32 @@ public void deleteRoles(List<Long> ids) { ... }
 
 
 
+## 文档编写规范
+
+### 文档目录
+
+所有项目文档存放在 `docs/` 目录，`docs/README.md` 是文档索引入口。新增文档前必须先阅读 `docs/README.md` 了解分类和命名规则。
+
+### 命名规则
+
+文件名格式：`{类型前缀}_{模块}_{描述}.md`，全大写下划线分隔。
+
+| 前缀 | 用途 | 示例 |
+|------|------|------|
+| `SYSTEM_` | 系统功能总结 | `SYSTEM_RBAC_SUMMARY.md` |
+| `UPDATE_` | 功能升级规划 | `UPDATE_NOTICE_AUTH_UPGRADE.md` |
+| `DESIGN_` | 架构/技术方案 | `DESIGN_DATABASE_SCHEMA.md` |
+| `GUIDE_` | 操作指南/部署 | `GUIDE_DEPLOYMENT.md` |
+| `API_` | 接口文档 | `API_AUTH_ENDPOINTS.md` |
+| `TROUBLESHOOT_` | 故障排查 | `TROUBLESHOOT_JWT_TOKEN_ISSUES.md` |
+
+### 新建文档流程
+
+1. 判断文档类型，选择对应前缀
+2. 检查 `docs/README.md` 索引，确认无重复
+3. 在 `docs/` 下按命名规则创建文件
+4. 在 `docs/README.md` 对应分类标题下添加索引条目
+
 ## Git 提交规范
 
 ### 自动提交原则
