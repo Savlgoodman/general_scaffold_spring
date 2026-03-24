@@ -12,8 +12,12 @@ import com.scaffold.admin.model.vo.SystemConfigGroupVO;
 import com.scaffold.admin.model.vo.SystemConfigItemVO;
 import com.scaffold.admin.mapper.SystemConfigMapper;
 import com.scaffold.admin.service.SystemConfigService;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.redis.core.RedisTemplate;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,12 +28,14 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class SystemConfigServiceImpl implements SystemConfigService {
 
     private final SystemConfigMapper systemConfigMapper;
-    private final RedisTemplate<String, Object> redisTemplate;
+    private final StringRedisTemplate stringRedisTemplate;
+    private final ObjectMapper objectMapper;
 
     /**
      * 公开配置白名单
@@ -70,12 +76,16 @@ public class SystemConfigServiceImpl implements SystemConfigService {
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     public List<SystemConfigItemVO> getPublicConfigs() {
-        // 尝试从缓存读取
-        Object cached = redisTemplate.opsForValue().get(PUBLIC_BUNDLE_KEY);
-        if (cached instanceof List<?>) {
-            return (List<SystemConfigItemVO>) cached;
+        // 尝试从缓存读取（存储为 JSON 字符串，避免 Jackson 泛型反序列化问题）
+        try {
+            String cached = stringRedisTemplate.opsForValue().get(PUBLIC_BUNDLE_KEY);
+            if (cached != null) {
+                return objectMapper.readValue(cached, new TypeReference<>() {});
+            }
+        } catch (Exception e) {
+            log.warn("读取公开配置缓存失败，将从数据库查询", e);
+            stringRedisTemplate.delete(PUBLIC_BUNDLE_KEY);
         }
 
         LambdaQueryWrapper<SystemConfig> query = new LambdaQueryWrapper<>();
@@ -91,7 +101,12 @@ public class SystemConfigServiceImpl implements SystemConfigService {
             return item;
         }).toList();
 
-        redisTemplate.opsForValue().set(PUBLIC_BUNDLE_KEY, result, CACHE_TTL_HOURS, TimeUnit.HOURS);
+        try {
+            String json = objectMapper.writeValueAsString(result);
+            stringRedisTemplate.opsForValue().set(PUBLIC_BUNDLE_KEY, json, CACHE_TTL_HOURS, TimeUnit.HOURS);
+        } catch (JsonProcessingException e) {
+            log.warn("序列化公开配置缓存失败", e);
+        }
         return result;
     }
 
@@ -112,19 +127,19 @@ public class SystemConfigServiceImpl implements SystemConfigService {
             systemConfigMapper.updateById(existing);
 
             // 清除单项缓存
-            redisTemplate.delete(RedisKeys.SYSTEM_CONFIG.key(entry.getConfigKey()));
+            stringRedisTemplate.delete(RedisKeys.SYSTEM_CONFIG.key(entry.getConfigKey()));
         }
 
         // 清除公开配置捆绑缓存
-        redisTemplate.delete(PUBLIC_BUNDLE_KEY);
+        stringRedisTemplate.delete(PUBLIC_BUNDLE_KEY);
     }
 
     @Override
     public String getConfigValue(String key) {
         String cacheKey = RedisKeys.SYSTEM_CONFIG.key(key);
-        Object cached = redisTemplate.opsForValue().get(cacheKey);
+        String cached = stringRedisTemplate.opsForValue().get(cacheKey);
         if (cached != null) {
-            return cached.toString();
+            return cached;
         }
 
         LambdaQueryWrapper<SystemConfig> query = new LambdaQueryWrapper<>();
@@ -134,7 +149,7 @@ public class SystemConfigServiceImpl implements SystemConfigService {
             return null;
         }
 
-        redisTemplate.opsForValue().set(cacheKey, config.getConfigValue(), CACHE_TTL_HOURS, TimeUnit.HOURS);
+        stringRedisTemplate.opsForValue().set(cacheKey, config.getConfigValue(), CACHE_TTL_HOURS, TimeUnit.HOURS);
         return config.getConfigValue();
     }
 }
