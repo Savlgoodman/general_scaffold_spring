@@ -114,11 +114,11 @@
   * {
     @apply border-border;
   }
-  html {
-    scrollbar-gutter: stable;
-  }
   body {
     @apply bg-background text-foreground;
+    /* 阻止 Radix Dialog 锁定滚动时移除滚动条导致页面位移 */
+    overflow-y: scroll !important;
+    padding-right: 0px !important;
   }
 }
 
