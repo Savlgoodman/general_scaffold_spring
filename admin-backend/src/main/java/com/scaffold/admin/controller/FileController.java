@@ -85,6 +85,12 @@ public class FileController {
         return R.ok(fileService.listRecycleBin(pageNum, pageSize));
     }
 
+    @DeleteMapping("/recycle-bin")
+    @Operation(operationId = "emptyRecycleBin", summary = "清空回收站", description = "立即彻底删除回收站中的所有文件（MinIO+数据库）")
+    public R<String> emptyRecycleBin() {
+        return R.ok(fileService.emptyRecycleBinAll());
+    }
+
     @GetMapping("/buckets")
     @Operation(operationId = "listBuckets", summary = "桶列表", description = "列出所有MinIO桶")
     public R<List<String>> listBuckets() {

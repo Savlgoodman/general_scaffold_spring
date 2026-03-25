@@ -33,8 +33,11 @@ public interface FileService {
     /** 回收站文件列表 */
     Page<AdminFile> listRecycleBin(Integer pageNum, Integer pageSize);
 
-    /** 清空回收站（定时任务调用，返回结果描述） */
+    /** 清空回收站（定时任务调用，按保留天数清理，返回结果描述） */
     String emptyRecycleBin();
+
+    /** 立即清空全部回收站（手动触发） */
+    String emptyRecycleBinAll();
 
     /** 孤儿文件扫描（定时任务调用，返回结果描述） */
     String scanOrphanFiles();

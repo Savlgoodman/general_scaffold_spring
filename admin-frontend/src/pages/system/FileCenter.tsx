@@ -120,6 +120,15 @@ export default function FileCenter() {
     } catch { toast({ title: '操作失败', variant: 'destructive' }) }
   }
 
+  const handleEmptyRecycleBin = async () => {
+    if (!confirm('确定要清空回收站吗？文件将从 MinIO 中永久删除！')) return
+    try {
+      const res = await filesApi.emptyRecycleBin()
+      if (res.code === 200) { toast({ title: res.data || '回收站已清空' }); fetchRecycle() }
+      else toast({ title: '清空失败', description: res.message, variant: 'destructive' })
+    } catch { toast({ title: '清空失败', variant: 'destructive' }) }
+  }
+
   const handleRestoreAll = async () => {
     let count = 0
     for (const f of recycleFiles) {
@@ -261,9 +270,14 @@ export default function FileCenter() {
                 <CardTitle className="text-lg">回收站</CardTitle>
                 <div className="flex items-center gap-2">
                   {recycleFiles.length > 0 && (
-                    <Button variant="outline" size="sm" onClick={handleRestoreAll}>
-                      <Undo2 className="w-4 h-4 mr-1.5" />全部还原
-                    </Button>
+                    <>
+                      <Button variant="outline" size="sm" onClick={handleRestoreAll}>
+                        <Undo2 className="w-4 h-4 mr-1.5" />全部还原
+                      </Button>
+                      <Button variant="destructive" size="sm" onClick={handleEmptyRecycleBin}>
+                        <Trash2 className="w-4 h-4 mr-1.5" />清空回收站
+                      </Button>
+                    </>
                   )}
                   <Button variant="outline" size="sm" onClick={fetchRecycle} disabled={recycleLoading}>
                     <RefreshCw className={`w-4 h-4 mr-1.5 ${recycleLoading ? 'animate-spin' : ''}`} />刷新

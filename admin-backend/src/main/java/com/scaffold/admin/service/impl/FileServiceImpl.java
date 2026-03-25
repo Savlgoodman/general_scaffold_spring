@@ -15,6 +15,7 @@ import com.scaffold.admin.service.FileService;
 import com.scaffold.admin.service.impl.AdminUserServiceImpl.AdminUserDetails;
 import com.scaffold.admin.util.SecurityUtils;
 import io.minio.*;
+import io.minio.http.Method;
 import io.minio.messages.Bucket;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -58,7 +59,9 @@ public class FileServiceImpl implements FileService {
 
     @Override
     public AdminFile getById(Long id) {
-        return fileMapper.selectById(id);
+        AdminFile file = fileMapper.selectById(id);
+        if (file != null) fillPresignedUrls(List.of(file));
+        return file;
     }
 
     @Override
@@ -91,7 +94,9 @@ public class FileServiceImpl implements FileService {
         else query.eq(AdminFile::getStatus, "active"); // 默认只查active
         if (keyword != null && !keyword.isBlank()) query.like(AdminFile::getFileName, keyword);
         query.orderByDesc(AdminFile::getCreateTime);
-        return fileMapper.selectPage(page, query);
+        Page<AdminFile> result = fileMapper.selectPage(page, query);
+        fillPresignedUrls(result.getRecords());
+        return result;
     }
 
     @Override
@@ -100,7 +105,7 @@ public class FileServiceImpl implements FileService {
         LambdaQueryWrapper<AdminFile> query = new LambdaQueryWrapper<AdminFile>()
             .eq(AdminFile::getStatus, "recycled")
             .orderByDesc(AdminFile::getDeletedAt);
-        return fileMapper.selectPage(page, query);
+        return fileMapper.selectPage(page, query); // 回收站不生成 URL
     }
 
     // ==================== 回收站操作 ====================
@@ -160,6 +165,26 @@ public class FileServiceImpl implements FileService {
             }
         }
         return "清空回收站 " + count + " 个文件（" + recycleBinRetentionDays + " 天前）";
+    }
+
+    @Override
+    @Transactional
+    public String emptyRecycleBinAll() {
+        List<AdminFile> files = fileMapper.selectList(
+            new LambdaQueryWrapper<AdminFile>().eq(AdminFile::getStatus, "recycled")
+        );
+        int count = 0;
+        for (AdminFile file : files) {
+            try {
+                removeFromMinio(file.getObjectName());
+                file.setStatus("deleted");
+                fileMapper.updateById(file);
+                count++;
+            } catch (Exception e) {
+                log.error("彻底删除文件失败: {}", file.getObjectName(), e);
+            }
+        }
+        return "清空回收站 " + count + " 个文件";
     }
 
     // ==================== 孤儿文件扫描 ====================
@@ -243,14 +268,15 @@ public class FileServiceImpl implements FileService {
             throw new BusinessException(ResultCode.INTERNAL_SERVER_ERROR, "文件上传失败");
         }
 
-        String url = endpoint + "/" + bucketName + "/" + objectName;
+        // DB 中存储的是对象标识 URL（用于孤儿扫描比对），访问时动态生成 presigned URL
+        String storageUrl = endpoint + "/" + bucketName + "/" + objectName;
 
         // 写入 DB
         AdminFile adminFile = new AdminFile();
         adminFile.setFileName(originalName);
         adminFile.setObjectName(objectName);
         adminFile.setBucketName(bucketName);
-        adminFile.setUrl(url);
+        adminFile.setUrl(storageUrl);
         adminFile.setSize(file.getSize());
         adminFile.setContentType(file.getContentType());
         adminFile.setCategory(category);
@@ -263,7 +289,8 @@ public class FileServiceImpl implements FileService {
         fileMapper.insert(adminFile);
 
         FileUploadVO vo = new FileUploadVO();
-        vo.setUrl(url);
+        // 头像用公开直链（长期有效），其他用 presigned URL（2 小时有效）
+        vo.setUrl("avatar".equals(category) ? storageUrl : getPresignedUrl(objectName));
         vo.setObjectName(objectName);
         vo.setFileName(originalName);
         vo.setSize(file.getSize());
@@ -277,6 +304,37 @@ public class FileServiceImpl implements FileService {
             );
         } catch (Exception e) {
             log.error("MinIO 删除文件失败: {}", objectName, e);
+        }
+    }
+
+    /** 生成 presigned URL（默认 2 小时有效） */
+    private String getPresignedUrl(String objectName) {
+        try {
+            return minioClient.getPresignedObjectUrl(
+                GetPresignedObjectUrlArgs.builder()
+                    .bucket(bucketName)
+                    .object(objectName)
+                    .method(Method.GET)
+                    .expiry(7200) // 2小时
+                    .build()
+            );
+        } catch (Exception e) {
+            log.error("生成 presigned URL 失败: {}", objectName, e);
+            return null;
+        }
+    }
+
+    /** 为文件列表填充访问 URL：avatar 用公开直链，其他用 presigned URL */
+    private void fillPresignedUrls(List<AdminFile> files) {
+        for (AdminFile file : files) {
+            if (!"active".equals(file.getStatus())) {
+                file.setUrl(null); // 回收站/已删除文件不生成 URL
+            } else if ("avatar".equals(file.getCategory())) {
+                // 头像目录是公开读的，直接用存储 URL
+                // url 已在上传时写入 DB，不需要替换
+            } else if (file.getObjectName() != null) {
+                file.setUrl(getPresignedUrl(file.getObjectName()));
+            }
         }
     }
 }

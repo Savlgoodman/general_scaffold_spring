@@ -38,7 +38,7 @@ public class MinIOConfig {
                 client.makeBucket(MakeBucketArgs.builder().bucket(bucketName).build());
                 log.info("MinIO 默认桶 '{}' 创建成功", bucketName);
             }
-            // 设置桶策略为公开读，使上传的文件可通过 URL 直接访问
+            // 仅 avatars/ 目录公开读（头像需要长期 URL），其他目录私有用 presigned URL
             String policy = """
                 {
                   "Version": "2012-10-17",
@@ -47,7 +47,7 @@ public class MinIOConfig {
                       "Effect": "Allow",
                       "Principal": {"AWS": ["*"]},
                       "Action": ["s3:GetObject"],
-                      "Resource": ["arn:aws:s3:::%s/*"]
+                      "Resource": ["arn:aws:s3:::%s/avatars/*"]
                     }
                   ]
                 }
