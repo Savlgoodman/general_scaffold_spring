@@ -9,6 +9,9 @@ import java.util.List;
 
 public interface FileService {
 
+    /** 根据ID查询文件 */
+    AdminFile getById(Long id);
+
     /** 通用文件上传（同时写入 DB） */
     FileUploadVO uploadFile(MultipartFile file, String category);
 

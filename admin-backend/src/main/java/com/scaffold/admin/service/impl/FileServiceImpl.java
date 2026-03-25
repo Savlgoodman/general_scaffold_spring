@@ -54,6 +54,11 @@ public class FileServiceImpl implements FileService {
     // ==================== 上传 ====================
 
     @Override
+    public AdminFile getById(Long id) {
+        return fileMapper.selectById(id);
+    }
+
+    @Override
     public FileUploadVO uploadFile(MultipartFile file, String category) {
         if (file.isEmpty()) throw new BusinessException(ResultCode.PARAM_ERROR, "文件不能为空");
         if (file.getSize() > MAX_FILE_SIZE) throw new BusinessException(ResultCode.PARAM_ERROR, "文件大小不能超过50MB");
