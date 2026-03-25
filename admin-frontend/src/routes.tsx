@@ -11,7 +11,8 @@ import ErrorLogPage from "@/pages/logs/ErrorLogPage"
 import NoticeManagement from "@/pages/system/NoticeManagement"
 import SystemMonitor from "@/pages/system/SystemMonitor"
 import Profile from "@/pages/Profile"
-import StorageManagement from "@/pages/system/StorageManagement"
+import FileCenter from "@/pages/system/FileCenter"
+import TaskCenter from "@/pages/system/TaskCenter"
 import OnlineUsers from "@/pages/monitor/OnlineUsers"
 import SystemSettings from "@/pages/system/SystemSettings"
 
@@ -39,7 +40,8 @@ export const appRoutes: RouteConfig[] = [
   { path: "/logs/error", title: "异常日志", icon: "AlertCircle", element: <ErrorLogPage /> },
   { path: "/system/notice", title: "通知公告", icon: "Bell", element: <NoticeManagement /> },
   { path: "/system/monitor", title: "系统监控", icon: "Activity", element: <SystemMonitor /> },
-  { path: "/system/storage", title: "存储管理", icon: "HardDrive", element: <StorageManagement /> },
+  { path: "/system/files", title: "文件中心", icon: "HardDrive", element: <FileCenter /> },
+  { path: "/system/tasks", title: "调度中心", icon: "Clock", element: <TaskCenter /> },
   { path: "/monitor/online", title: "在线用户", icon: "Monitor", element: <OnlineUsers /> },
   { path: "/system/settings", title: "系统设置", icon: "Settings", element: <SystemSettings /> },
   { path: "/profile", title: "个人中心", icon: "User", element: <Profile /> },
