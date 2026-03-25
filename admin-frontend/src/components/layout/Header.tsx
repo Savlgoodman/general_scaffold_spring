@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
-import { Bell, Search, Sun, Moon, Monitor, Coffee, LogOut, Code, Megaphone, Eraser } from "lucide-react"
+import { Bell, Search, Sun, Moon, Monitor, Coffee, LogOut, Code, Megaphone, Eraser, Settings } from "lucide-react"
 import { useThemeStore } from "@/store/theme"
 import { useAuthStore } from "@/store/auth"
 import { usePreferencesStore, NOTICE_SPEED_MAP } from "@/store/preferences"
@@ -11,6 +11,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import ReactMarkdown from "react-markdown"
 import remarkGfm from "remark-gfm"
+import PreferencesSheet from "./PreferencesSheet"
 import { getNotices } from "@/api/generated/notices/notices"
 import type { AdminNotice } from "@/api/generated/model"
 import {
@@ -192,6 +193,8 @@ function Header() {
   const navigate = useNavigate()
   const { theme, setTheme } = useThemeStore()
   const { logout, user, devMode, toggleDevMode } = useAuthStore()
+  const { avatarPosition } = usePreferencesStore()
+  const [prefsOpen, setPrefsOpen] = useState(false)
   const isSuperuser = user?.isSuperuser === 1
 
   const themeIcon = {
@@ -284,38 +287,47 @@ function Header() {
 
         <div className="w-px h-6 bg-border mx-2" />
 
-        {/* User Menu */}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="rounded-full">
-              <Avatar className="size-8">
-                <AvatarImage src={user?.avatar || ''} alt={displayName} />
-                <AvatarFallback className="bg-primary text-primary-foreground text-xs">
-                  {displayName.slice(0, 2).toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56">
-            <DropdownMenuLabel className="font-normal">
-              <div className="flex flex-col space-y-1">
-                <p className="text-sm font-medium leading-none">{displayName}</p>
-                <p className="text-xs leading-none text-muted-foreground">
-                  {user?.username}
-                </p>
-              </div>
-            </DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => navigate('/profile')}>个人中心</DropdownMenuItem>
-            <DropdownMenuItem onClick={() => navigate('/settings')}>设置</DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={handleLogout} className="text-destructive cursor-pointer">
-              <LogOut className="w-4 h-4 mr-2" />
-              退出登录
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        {avatarPosition === 'header' ? (
+          /* User Menu - 头像在右上角 */
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="rounded-full">
+                <Avatar className="size-8">
+                  <AvatarImage src={user?.avatar || ''} alt={displayName} />
+                  <AvatarFallback className="bg-primary text-primary-foreground text-xs">
+                    {displayName.slice(0, 2).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuLabel className="font-normal">
+                <div className="flex flex-col space-y-1">
+                  <p className="text-sm font-medium leading-none">{displayName}</p>
+                  <p className="text-xs leading-none text-muted-foreground">
+                    {user?.username}
+                  </p>
+                </div>
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => navigate('/profile')}>个人中心</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setPrefsOpen(true)}>设置</DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={handleLogout} className="text-destructive cursor-pointer">
+                <LogOut className="w-4 h-4 mr-2" />
+                退出登录
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        ) : (
+          /* 头像在侧边栏时，右上角只显示设置按钮 */
+          <Button variant="ghost" size="icon" onClick={() => setPrefsOpen(true)}>
+            <Settings className="size-4" />
+          </Button>
+        )}
       </div>
+
+      <PreferencesSheet open={prefsOpen} onOpenChange={setPrefsOpen} />
     </header>
   )
 }

@@ -1,13 +1,20 @@
-import { Link, useLocation } from "react-router-dom"
-import { LayoutDashboard, Settings } from "lucide-react"
+import { Link, useLocation, useNavigate } from "react-router-dom"
+import { LayoutDashboard, Settings, LogOut, ChevronRight } from "lucide-react"
 import { useAuthStore } from "@/store/auth"
 import { useSiteConfigStore } from "@/store/site-config"
+import { usePreferencesStore } from "@/store/preferences"
 import { appRoutes } from "@/routes"
 import { getIcon } from "@/lib/icon-map"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem,
+  DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
 import {
   Sidebar,
   SidebarContent,
+  SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
@@ -21,23 +28,173 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar"
 
-// getIcon 和 iconMap 从 @/lib/icon-map 导入
-
 function AppSidebar() {
   const location = useLocation()
+  const navigate = useNavigate()
   const { state } = useSidebar()
   const collapsed = state === "collapsed"
-  const { menus, user, devMode } = useAuthStore()
+  const { menus, user, devMode, logout } = useAuthStore()
   const { config } = useSiteConfigStore()
+  const { sidebarStyle, avatarPosition } = usePreferencesStore()
   const isSuperuser = user?.isSuperuser === 1
   const showDevMode = isSuperuser && devMode
+  const displayName = user?.nickname || user?.username || 'Admin'
 
-  // 从菜单树中提取所有叶子菜单（扁平化），收起时使用
   const flatMenuItems = menus.flatMap((item) =>
-    item.type === "directory" && item.children?.length
-      ? item.children
-      : [item]
+    item.type === "directory" && item.children?.length ? item.children : [item]
   )
+
+  const handleLogout = () => { logout(); window.location.href = '/login' }
+
+  // ==================== 菜单渲染 ====================
+
+  const renderDevMode = () => (
+    <SidebarGroup>
+      <SidebarGroupLabel><Settings className="size-4" data-icon="inline-start" />全部页面</SidebarGroupLabel>
+      <SidebarGroupContent>
+        <SidebarMenu>
+          {appRoutes.map((route) => {
+            const Icon = getIcon(route.icon)
+            return (
+              <SidebarMenuItem key={route.path}>
+                <SidebarMenuButton asChild isActive={location.pathname === route.path} tooltip={route.title}>
+                  <Link to={route.path}><Icon className="size-4" data-icon="inline-start" />{route.title}</Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            )
+          })}
+        </SidebarMenu>
+      </SidebarGroupContent>
+    </SidebarGroup>
+  )
+
+  const renderCollapsed = () => (
+    <SidebarGroup>
+      <SidebarGroupContent>
+        <SidebarMenu>
+          {flatMenuItems.map((item) => {
+            const Icon = getIcon(item.icon)
+            return (
+              <SidebarMenuItem key={item.id}>
+                <SidebarMenuButton asChild isActive={location.pathname === item.path} tooltip={item.name}>
+                  <Link to={item.path ?? "/"}><Icon className="size-4" data-icon="inline-start" />{item.name}</Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            )
+          })}
+        </SidebarMenu>
+      </SidebarGroupContent>
+    </SidebarGroup>
+  )
+
+  // 默认分组样式：GroupLabel + Sub 缩进
+  const renderDefault = () => menus.map((item) => {
+    if (item.type === "directory" && item.children?.length) {
+      const DirIcon = getIcon(item.icon)
+      return (
+        <SidebarGroup key={item.id}>
+          <SidebarGroupLabel><DirIcon className="size-4" data-icon="inline-start" />{item.name}</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              <SidebarMenuSub>
+                {item.children.map((child) => {
+                  const ChildIcon = getIcon(child.icon)
+                  return (
+                    <SidebarMenuSubItem key={child.id}>
+                      <SidebarMenuSubButton asChild isActive={location.pathname === child.path}>
+                        <Link to={child.path ?? "/"}><ChildIcon className="size-4" data-icon="inline-start" />{child.name}</Link>
+                      </SidebarMenuSubButton>
+                    </SidebarMenuSubItem>
+                  )
+                })}
+              </SidebarMenuSub>
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+      )
+    }
+    const ItemIcon = getIcon(item.icon)
+    return (
+      <SidebarGroup key={item.id}>
+        <SidebarGroupContent>
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild isActive={location.pathname === item.path} tooltip={item.name}>
+                <Link to={item.path ?? "/"}><ItemIcon className="size-4" data-icon="inline-start" />{item.name}</Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarGroupContent>
+      </SidebarGroup>
+    )
+  })
+
+  // 紧凑列表样式：分组标签 + 无缩进的平级列表
+  const renderCompact = () => menus.map((item) => {
+    if (item.type === "directory" && item.children?.length) {
+      const DirIcon = getIcon(item.icon)
+      return (
+        <SidebarGroup key={item.id}>
+          <SidebarGroupLabel><DirIcon className="size-4" data-icon="inline-start" />{item.name}</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {item.children.map((child) => {
+                const ChildIcon = getIcon(child.icon)
+                return (
+                  <SidebarMenuItem key={child.id}>
+                    <SidebarMenuButton asChild isActive={location.pathname === child.path} tooltip={child.name}>
+                      <Link to={child.path ?? "/"}><ChildIcon className="size-4" data-icon="inline-start" />{child.name}</Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                )
+              })}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+      )
+    }
+    const ItemIcon = getIcon(item.icon)
+    return (
+      <SidebarGroup key={item.id}>
+        <SidebarGroupContent>
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild isActive={location.pathname === item.path} tooltip={item.name}>
+                <Link to={item.path ?? "/"}><ItemIcon className="size-4" data-icon="inline-start" />{item.name}</Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarGroupContent>
+      </SidebarGroup>
+    )
+  })
+
+  // 扁平无组样式：所有菜单扁平排列
+  const renderFlat = () => (
+    <SidebarGroup>
+      <SidebarGroupContent>
+        <SidebarMenu>
+          {flatMenuItems.map((item) => {
+            const Icon = getIcon(item.icon)
+            return (
+              <SidebarMenuItem key={item.id}>
+                <SidebarMenuButton asChild isActive={location.pathname === item.path} tooltip={item.name}>
+                  <Link to={item.path ?? "/"}><Icon className="size-4" data-icon="inline-start" />{item.name}</Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            )
+          })}
+        </SidebarMenu>
+      </SidebarGroupContent>
+    </SidebarGroup>
+  )
+
+  const renderExpandedMenus = () => {
+    if (showDevMode) return renderDevMode()
+    if (sidebarStyle === 'compact') return renderCompact()
+    if (sidebarStyle === 'flat') return renderFlat()
+    return renderDefault()
+  }
 
   return (
     <Sidebar collapsible="icon">
@@ -62,125 +219,52 @@ function AppSidebar() {
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
-      <SidebarContent>
-        {showDevMode ? (
-          /* 开发者模式 */
-          <SidebarGroup>
-            <SidebarGroupLabel>
-              <Settings className="size-4" data-icon="inline-start" />
-              全部页面
-            </SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                {appRoutes.map((route) => {
-                  const Icon = getIcon(route.icon)
-                  return (
-                    <SidebarMenuItem key={route.path}>
-                      <SidebarMenuButton
-                        asChild
-                        isActive={location.pathname === route.path}
-                        tooltip={route.title}
-                      >
-                        <Link to={route.path}>
-                          <Icon className="size-4" data-icon="inline-start" />
-                          {route.title}
-                        </Link>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  )
-                })}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        ) : collapsed ? (
-          /* 收起模式：所有菜单扁平显示为图标 */
-          <SidebarGroup>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                {flatMenuItems.map((item) => {
-                  const Icon = getIcon(item.icon)
-                  return (
-                    <SidebarMenuItem key={item.id}>
-                      <SidebarMenuButton
-                        asChild
-                        isActive={location.pathname === item.path}
-                        tooltip={item.name}
-                      >
-                        <Link to={item.path ?? "/"}>
-                          <Icon className="size-4" data-icon="inline-start" />
-                          {item.name}
-                        </Link>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  )
-                })}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        ) : (
-          /* 展开模式：原来的 GroupLabel + Sub 样式 */
-          menus.map((item) => {
-            if (item.type === "directory" && item.children?.length) {
-              const DirIcon = getIcon(item.icon)
-              return (
-                <SidebarGroup key={item.id}>
-                  <SidebarGroupLabel>
-                    <DirIcon className="size-4" data-icon="inline-start" />
-                    {item.name}
-                  </SidebarGroupLabel>
-                  <SidebarGroupContent>
-                    <SidebarMenu>
-                      <SidebarMenuSub>
-                        {item.children.map((child) => {
-                          const ChildIcon = getIcon(child.icon)
-                          return (
-                            <SidebarMenuSubItem key={child.id}>
-                              <SidebarMenuSubButton
-                                asChild
-                                isActive={location.pathname === child.path}
-                              >
-                                <Link to={child.path ?? "/"}>
-                                  <ChildIcon
-                                    className="size-4"
-                                    data-icon="inline-start"
-                                  />
-                                  {child.name}
-                                </Link>
-                              </SidebarMenuSubButton>
-                            </SidebarMenuSubItem>
-                          )
-                        })}
-                      </SidebarMenuSub>
-                    </SidebarMenu>
-                  </SidebarGroupContent>
-                </SidebarGroup>
-              )
-            }
 
-            const ItemIcon = getIcon(item.icon)
-            return (
-              <SidebarGroup key={item.id}>
-                <SidebarGroupContent>
-                  <SidebarMenu>
-                    <SidebarMenuItem>
-                      <SidebarMenuButton
-                        asChild
-                        isActive={location.pathname === item.path}
-                        tooltip={item.name}
-                      >
-                        <Link to={item.path ?? "/"}>
-                          <ItemIcon className="size-4" data-icon="inline-start" />
-                          {item.name}
-                        </Link>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  </SidebarMenu>
-                </SidebarGroupContent>
-              </SidebarGroup>
-            )
-          })
-        )}
+      <SidebarContent>
+        {collapsed ? renderCollapsed() : renderExpandedMenus()}
       </SidebarContent>
+
+      {/* 侧边栏底部用户头像 */}
+      {avatarPosition === 'sidebar' && (
+        <SidebarFooter>
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <SidebarMenuButton size="lg" tooltip={displayName}>
+                    <Avatar className="size-8">
+                      <AvatarImage src={user?.avatar || ''} alt={displayName} />
+                      <AvatarFallback className="bg-primary text-primary-foreground text-xs">
+                        {displayName.slice(0, 2).toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="grid flex-1 text-left text-sm leading-tight">
+                      <span className="truncate font-semibold">{displayName}</span>
+                      <span className="truncate text-xs text-muted-foreground">{user?.username}</span>
+                    </div>
+                    <ChevronRight className="ml-auto size-4" />
+                  </SidebarMenuButton>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent side="right" align="end" className="w-56">
+                  <DropdownMenuLabel className="font-normal">
+                    <div className="flex flex-col space-y-1">
+                      <p className="text-sm font-medium leading-none">{displayName}</p>
+                      <p className="text-xs leading-none text-muted-foreground">{user?.username}</p>
+                    </div>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => navigate('/profile')}>个人中心</DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleLogout} className="text-destructive cursor-pointer">
+                    <LogOut className="w-4 h-4 mr-2" />
+                    退出登录
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarFooter>
+      )}
     </Sidebar>
   )
 }
