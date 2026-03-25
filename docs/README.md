@@ -50,6 +50,7 @@
 
 - [UPDATE_NOTIFICATION_AND_MONITOR_SYSTEM.md](./UPDATE_NOTIFICATION_AND_MONITOR_SYSTEM.md) — 通知公告及系统监控功能：后端接口设计、前端页面规划、实施步骤
 - [UPDATE_MINIO_FILE_STORAGE.md](./UPDATE_MINIO_FILE_STORAGE.md) — MinIO 对象存储集成：文件上传、头像管理、桶存储后台管理
+- [UPDATE_FRONTEND_PREFERENCES.md](./UPDATE_FRONTEND_PREFERENCES.md) — 前端偏好设置：主题/通知/布局偏好、通知已读管理
 
 ---
 
