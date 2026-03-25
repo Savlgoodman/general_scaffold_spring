@@ -31,7 +31,7 @@ export default function ProtectedRoute() {
   }
 
   // 白名单路由：所有登录用户均可访问
-  const publicPaths = ['/', '/profile']
+  const publicPaths = ['/', '/profile', '/settings']
   if (publicPaths.includes(location.pathname)) {
     return <Outlet />
   }

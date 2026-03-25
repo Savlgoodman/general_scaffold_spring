@@ -199,7 +199,7 @@ function Header() {
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => navigate('/profile')}>个人中心</DropdownMenuItem>
-            <DropdownMenuItem>设置</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => navigate('/settings')}>设置</DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={handleLogout} className="text-destructive cursor-pointer">
               <LogOut className="w-4 h-4 mr-2" />

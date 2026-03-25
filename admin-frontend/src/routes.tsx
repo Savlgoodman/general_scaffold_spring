@@ -12,6 +12,7 @@ import NoticeManagement from "@/pages/system/NoticeManagement"
 import SystemMonitor from "@/pages/system/SystemMonitor"
 import Profile from "@/pages/Profile"
 import StorageManagement from "@/pages/system/StorageManagement"
+import Settings from "@/pages/Settings"
 import OnlineUsers from "@/pages/monitor/OnlineUsers"
 import SystemSettings from "@/pages/system/SystemSettings"
 
@@ -43,4 +44,5 @@ export const appRoutes: RouteConfig[] = [
   { path: "/monitor/online", title: "在线用户", icon: "Monitor", element: <OnlineUsers /> },
   { path: "/system/settings", title: "系统设置", icon: "Settings", element: <SystemSettings /> },
   { path: "/profile", title: "个人中心", icon: "User", element: <Profile /> },
+  { path: "/settings", title: "偏好设置", icon: "Settings", element: <Settings /> },
 ]
