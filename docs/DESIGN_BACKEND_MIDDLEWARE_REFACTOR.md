@@ -71,7 +71,7 @@ Spring Security Filter 中的异常不经过 `@RestControllerAdvice`，Spring Bo
 
 - `GlobalExceptionHandler` 补全缺失异常类型
 - Controller 层删除所有手动 try-catch
-- Service 层 `IllegalArgumentException` → `BusinessException`（含安全��用户���好 message）
+- Service 层 `IllegalArgumentException` → `BusinessException`（含安全用户好 message）
 
 ### Fix 4：SecurityUtils 工具类
 

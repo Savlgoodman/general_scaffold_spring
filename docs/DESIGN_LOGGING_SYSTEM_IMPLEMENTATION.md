@@ -7,24 +7,24 @@
 
 ### 已完成（可直接使用）
 
-| 组件 | 状态 | 说明 |
-|------|------|------|
-| 数据库表 `admin_api_log` | ✅ 已建 | V1 迁移脚本创建，字段齐全 |
-| 数据库表 `admin_login_log` | ✅ 已建 | V1 + V2 补了 update_time |
-| 数据库表 `admin_operation_log` | ✅ 已建 | V1 迁移脚本创建 |
-| 数据库表 `admin_error_log` | ✅ 已建 | V1 迁移脚本创建 |
-| 实体类 `AdminApiLog` / `AdminLoginLog` / `AdminOperationLog` / `AdminErrorLog` | ✅ 已建 | 均继承 BaseEntity，字段与表对应 |
-| Mapper `AdminApiLogMapper` / `AdminLoginLogMapper` / `AdminOperationLogMapper` / `AdminErrorLogMapper` | ✅ 已建 | 均为空接��继承 BaseMapper |
-| 登录日志记录 | ✅ 已实现 | `AuthServiceImpl.recordLoginLog()` 在登录/注册流程中调用，写入 admin_login_log |
+| 组件　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　 | 状态　　 | 说明　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　 |
+| --------------------------------------------------------------------------------------------------------| ----------| --------------------------------------------------------------------------------|
+| 数据库表 `admin_api_log`　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　 | ✅ 已建　 | V1 迁移脚本创建，字段齐全　　　　　　　　　　　　　　　　　　　　　　　　　　　|
+| 数据库表 `admin_login_log`　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　 | ✅ 已建　 | V1 + V2 补了 update_time　　　　　　　　　　　　　　　　　　　　　　　　　　　 |
+| 数据库表 `admin_operation_log`　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　 | ✅ 已建　 | V1 迁移脚本创建　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　|
+| 数据库表 `admin_error_log`　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　 | ✅ 已建　 | V1 迁移脚本创建　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　|
+| 实体类 `AdminApiLog` / `AdminLoginLog` / `AdminOperationLog` / `AdminErrorLog`　　　　　　　　　　　　 | ✅ 已建　 | 均继承 BaseEntity，字段与表对应　　　　　　　　　　　　　　　　　　　　　　　　|
+| Mapper `AdminApiLogMapper` / `AdminLoginLogMapper` / `AdminOperationLogMapper` / `AdminErrorLogMapper` | ✅ 已建　 | 均为空接口继承 BaseMapper　　　　　　　　　　　　　　　　　　　　　　　　　　　|
+| 登录日志记录　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　 | ✅ 已实现 | `AuthServiceImpl.recordLoginLog()` 在登录/注册流程中调用，写入 admin_login_log |
 
 ### 待开发
 
-| 组件 | 当前状态 | 需要做什么 |
-|------|----------|-----------|
-| API 请求日志 | `ApiLogInterceptor` 仅输出控制台日志 | 改为 AOP 切面 + 异步写入 DB |
-| 操作审计日志 | 完全空白 | ��建注解 + AOP 切面 + 异步写入 |
-| 系统异常日志 | `GlobalExceptionHandler` 仅输出控制台日志 | 增加异步写入 DB |
-| 异步基础设施 | 不存在 | 新建 `AsyncConfig` + 线程池 |
+| 组件　　　　 | 当前状态　　　　　　　　　　　　　　　　　| 需要做什么　　　　　　　　　　　|
+| --------------| -------------------------------------------| ---------------------------------|
+| API 请求日志 | `ApiLogInterceptor` 仅输出控制台日志　　　| 改为 AOP 切面 + 异步写入 DB　　 |
+| 操作审计日志 | 完全空白　　　　　　　　　　　　　　　　　| 注解 + AOP 切面 + 异步写入 |
+| 系统异常日志 | `GlobalExceptionHandler` 仅输出控制台日志 | 增加异步写入 DB　　　　　　　　 |
+| 异步基础设施 | 不存在　　　　　　　　　　　　　　　　　　| 新建 `AsyncConfig` + 线程池　　 |
 
 ---
 

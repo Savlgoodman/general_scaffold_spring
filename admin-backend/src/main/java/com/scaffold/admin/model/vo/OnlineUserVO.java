@@ -30,7 +30,7 @@ public class OnlineUserVO {
     @Schema(description = "User-Agent")
     private String userAgent;
 
-    @Schema(description = "登录时��")
+    @Schema(description = "登录时间")
     private LocalDateTime loginTime;
 
     @Schema(description = "最后活跃时间")

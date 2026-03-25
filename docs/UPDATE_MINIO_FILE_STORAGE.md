@@ -83,10 +83,10 @@ minio:
 - 基本信息编辑：昵称、邮箱、手机号
 - 修改密码区域
 
-**���改**：
+**修改**：
 - `routes.tsx` 注册 `/profile` 路由
 - `Header.tsx` "个人中心"菜单项链接到 `/profile`
-- `Header.tsx` Avatar ���件显��真实头像 URL
+- `Header.tsx` Avatar 组件显示真实头像 URL
 
 ### Phase 3：前端 — 桶存储管理页
 

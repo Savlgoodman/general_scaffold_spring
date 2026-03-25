@@ -20,17 +20,17 @@
 
 ### 2.1 偏好设置项
 
-| 分组 | 设置项 | 类型 | 默认值 | 说明 |
-|------|--------|------|--------|------|
-| 外观 | 主题 | 单选 | light | light/dark/warm/system，复用现有 `useThemeStore` |
-| 外观 | 侧边栏默认折叠 | 开关 | false | 页面加载时侧边栏是否折叠 |
-| 通知 | 显示 Header 通知轮播 | 开关 | true | 关闭后 Header 不显示 NoticeMarquee |
-| 通知 | ���知轮播速度 | 单选 | normal | slow(8s)/normal(5s)/fast(3s) |
-| 通知 | 显示 Dashboard 公告区 | 开关 | true | 关闭后 Dashboard 不渲染公告卡片 |
+| 分组 | 设置项　　　　　　　　| 类型 | 默认值 | 说明　　　　　　　　　　　　　　　　　　　　　　 |
+| ------| -----------------------| ------| --------| --------------------------------------------------|
+| 外观 | 主题　　　　　　　　　| 单选 | light　| light/dark/warm/system，复用现有 `useThemeStore` |
+| 外观 | 侧边栏默认折叠　　　　| 开关 | false　| 页面加载时侧边栏是否折叠　　　　　　　　　　　　 |
+| 通知 | 显示 Header 通知轮播　| 开关 | true　 | 关闭后 Header 不显示 NoticeMarquee　　　　　　　 |
+| 通知 | 通知轮播速度　　　　　| 单选 | normal | slow(8s)/normal(5s)/fast(3s)　　　　　　　　　　 |
+| 通知 | 显示 Dashboard 公告区 | 开关 | true　 | 关闭后 Dashboard 不渲染公告卡片　　　　　　　　　|
 
 ### 2.2 通知已读管理
 
-**存储方式**：localStorage `notice-read-ids` 键，存储 `Set<number>` 序列化后的 JSON ���组。
+**存储方式**：localStorage `notice-read-ids` 键，存储 `Set<number>` 序列化后的 JSON 组。
 
 **交互逻辑**：
 - Header Bell 按钮显示未读通知数量角标
@@ -79,14 +79,14 @@ interface PreferencesState {
 
 ### 3.2 消费方改造
 
-| 组件 | 改造点 |
-|------|--------|
-| `Header.tsx` — NoticeMarquee | 读取 `showHeaderNotice`，为 false 时不渲染 |
-| `Header.tsx` — Bell 按钮 | 读��� `readNoticeIds`，显示未读角标，点击弹出通知列表 |
-| `Header.tsx` — NoticeMarquee | 读取 `noticeSpeed`，映射为轮播间隔毫秒 |
-| `Dashboard.tsx` — NoticeBoard | 读取 `showDashboardNotice`，为 false 时不渲染 |
-| `Header.tsx` — "设置"菜单项 | 导航到 `/settings` |
-| `ProtectedRoute.tsx` | 白名单增加 `/settings` |
+| 组件　　　　　　　　　　　　　| 改造点　　　　　　　　　　　　　　　　　　　　　　　 |
+| -------------------------------| ------------------------------------------------------|
+| `Header.tsx` — NoticeMarquee　| 读取 `showHeaderNotice`，为 false 时不渲染　　　　　 |
+| `Header.tsx` — Bell 按钮　　　| 读取 `readNoticeIds`，显示未读角标，点击弹出通知列表 |
+| `Header.tsx` — NoticeMarquee　| 读取 `noticeSpeed`，映射为轮播间隔毫秒　　　　　　　 |
+| `Dashboard.tsx` — NoticeBoard | 读取 `showDashboardNotice`，为 false 时不渲染　　　　|
+| `Header.tsx` — "设置"菜单项　 | 导航到 `/settings`　　　　　　　　　　　　　　　　　 |
+| `ProtectedRoute.tsx`　　　　　| 白名单增加 `/settings`　　　　　　　　　　　　　　　 |
 
 ### 3.3 通知 Popover
 

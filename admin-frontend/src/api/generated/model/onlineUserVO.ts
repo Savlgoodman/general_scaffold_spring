@@ -22,7 +22,7 @@ export interface OnlineUserVO {
   loginIp?: string;
   /** User-Agent */
   userAgent?: string;
-  /** 登录时�� */
+  /** 登录时间 */
   loginTime?: string;
   /** 最后活跃时间 */
   lastActiveTime?: string;
