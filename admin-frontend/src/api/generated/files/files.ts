@@ -12,6 +12,7 @@ import type {
   RFileUploadVO,
   RListString,
   RPageAdminFile,
+  RString,
   RVoid,
   UploadAvatarBody,
   UploadFileBody,
@@ -131,6 +132,18 @@ const listRecycleBin = (
       options);
     }
   /**
+ * 立即彻底删除回收站中的所有文件（MinIO+数据库）
+ * @summary 清空回收站
+ */
+const emptyRecycleBin = (
+    
+ options?: SecondParameter<typeof customInstance<RString>>,) => {
+      return customInstance<RString>(
+      {url: `/api/admin/files/recycle-bin`, method: 'DELETE'
+    },
+      options);
+    }
+  /**
  * 列出所有MinIO桶
  * @summary 桶列表
  */
@@ -142,7 +155,7 @@ const listBuckets = (
     },
       options);
     }
-  return {restoreFile,recycleFile,uploadFile,uploadAvatar,listFiles,getFileDetail,deleteFilePermanently,listRecycleBin,listBuckets}};
+  return {restoreFile,recycleFile,uploadFile,uploadAvatar,listFiles,getFileDetail,deleteFilePermanently,listRecycleBin,emptyRecycleBin,listBuckets}};
 export type RestoreFileResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getFiles>['restoreFile']>>>
 export type RecycleFileResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getFiles>['recycleFile']>>>
 export type UploadFileResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getFiles>['uploadFile']>>>
@@ -151,4 +164,5 @@ export type ListFilesResult = NonNullable<Awaited<ReturnType<ReturnType<typeof g
 export type GetFileDetailResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getFiles>['getFileDetail']>>>
 export type DeleteFilePermanentlyResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getFiles>['deleteFilePermanently']>>>
 export type ListRecycleBinResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getFiles>['listRecycleBin']>>>
+export type EmptyRecycleBinResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getFiles>['emptyRecycleBin']>>>
 export type ListBucketsResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getFiles>['listBuckets']>>>
