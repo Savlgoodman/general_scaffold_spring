@@ -5,7 +5,15 @@
  * 后台管理系统后端 API 文档，前端可通过 OpenAPI Schema 自动生成接口调用代码
  * OpenAPI spec version: 1.0.0
  */
+import type { AdminTaskLog } from './adminTaskLog';
 
-export type UploadFileParams = {
-category?: string;
-};
+/**
+ * 统一响应封装
+ */
+export interface RAdminTaskLog {
+  /** 状态码 */
+  code?: number;
+  /** 状态消息 */
+  message?: string;
+  data?: AdminTaskLog;
+}

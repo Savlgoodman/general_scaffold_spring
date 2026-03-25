@@ -6,6 +6,9 @@
  * OpenAPI spec version: 1.0.0
  */
 
-export type UploadFileParams = {
-category?: string;
+export type ListTaskLogsParams = {
+pageNum?: number;
+pageSize?: number;
+taskName?: string;
+status?: string;
 };

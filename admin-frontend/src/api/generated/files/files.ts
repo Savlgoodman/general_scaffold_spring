@@ -6,11 +6,12 @@
  * OpenAPI spec version: 1.0.0
  */
 import type {
-  DeleteFileParams,
   ListFilesParams,
+  ListRecycleBinParams,
+  RAdminFile,
   RFileUploadVO,
-  RListBucketFileVO,
   RListString,
+  RPageAdminFile,
   RVoid,
   UploadAvatarBody,
   UploadFileBody,
@@ -26,7 +27,31 @@ type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
   export const getFiles = () => {
 /**
- * 上传文件到MinIO（≤50MB）
+ * 从回收站恢复文件
+ * @summary 恢复文件
+ */
+const restoreFile = (
+    id: number,
+ options?: SecondParameter<typeof customInstance<RVoid>>,) => {
+      return customInstance<RVoid>(
+      {url: `/api/admin/files/${id}/restore`, method: 'PUT'
+    },
+      options);
+    }
+  /**
+ * 将文件移入回收站
+ * @summary 移入回收站
+ */
+const recycleFile = (
+    id: number,
+ options?: SecondParameter<typeof customInstance<RVoid>>,) => {
+      return customInstance<RVoid>(
+      {url: `/api/admin/files/${id}/recycle`, method: 'PUT'
+    },
+      options);
+    }
+  /**
+ * 上传文件到MinIO并记录到数据库（≤50MB）
  * @summary 通用文件上传
  */
 const uploadFile = (
@@ -56,27 +81,51 @@ const uploadAvatar = (
       options);
     }
   /**
- * 列出指定前缀下的所有文件
+ * 分页查询文件记录
  * @summary 文件列表
  */
 const listFiles = (
     params?: ListFilesParams,
- options?: SecondParameter<typeof customInstance<RListBucketFileVO>>,) => {
-      return customInstance<RListBucketFileVO>(
+ options?: SecondParameter<typeof customInstance<RPageAdminFile>>,) => {
+      return customInstance<RPageAdminFile>(
       {url: `/api/admin/files`, method: 'GET',
         params
     },
       options);
     }
   /**
- * 根据对象名删除MinIO中的文件
- * @summary 删除文件
+ * 获取单条文件记录详情
+ * @summary 文件详情
  */
-const deleteFile = (
-    params: DeleteFileParams,
+const getFileDetail = (
+    id: number,
+ options?: SecondParameter<typeof customInstance<RAdminFile>>,) => {
+      return customInstance<RAdminFile>(
+      {url: `/api/admin/files/${id}`, method: 'GET'
+    },
+      options);
+    }
+  /**
+ * 彻底删除文件（MinIO+数据库）
+ * @summary 彻底删除
+ */
+const deleteFilePermanently = (
+    id: number,
  options?: SecondParameter<typeof customInstance<RVoid>>,) => {
       return customInstance<RVoid>(
-      {url: `/api/admin/files`, method: 'DELETE',
+      {url: `/api/admin/files/${id}`, method: 'DELETE'
+    },
+      options);
+    }
+  /**
+ * 分页查询回收站文件
+ * @summary 回收站列表
+ */
+const listRecycleBin = (
+    params?: ListRecycleBinParams,
+ options?: SecondParameter<typeof customInstance<RPageAdminFile>>,) => {
+      return customInstance<RPageAdminFile>(
+      {url: `/api/admin/files/recycle-bin`, method: 'GET',
         params
     },
       options);
@@ -93,9 +142,13 @@ const listBuckets = (
     },
       options);
     }
-  return {uploadFile,uploadAvatar,listFiles,deleteFile,listBuckets}};
+  return {restoreFile,recycleFile,uploadFile,uploadAvatar,listFiles,getFileDetail,deleteFilePermanently,listRecycleBin,listBuckets}};
+export type RestoreFileResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getFiles>['restoreFile']>>>
+export type RecycleFileResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getFiles>['recycleFile']>>>
 export type UploadFileResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getFiles>['uploadFile']>>>
 export type UploadAvatarResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getFiles>['uploadAvatar']>>>
 export type ListFilesResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getFiles>['listFiles']>>>
-export type DeleteFileResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getFiles>['deleteFile']>>>
+export type GetFileDetailResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getFiles>['getFileDetail']>>>
+export type DeleteFilePermanentlyResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getFiles>['deleteFilePermanently']>>>
+export type ListRecycleBinResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getFiles>['listRecycleBin']>>>
 export type ListBucketsResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getFiles>['listBuckets']>>>

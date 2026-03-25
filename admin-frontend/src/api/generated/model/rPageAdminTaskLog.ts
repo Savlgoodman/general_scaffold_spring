@@ -5,16 +5,15 @@
  * 后台管理系统后端 API 文档，前端可通过 OpenAPI Schema 自动生成接口调用代码
  * OpenAPI spec version: 1.0.0
  */
-import type { BucketFileVO } from './bucketFileVO';
+import type { PageAdminTaskLog } from './pageAdminTaskLog';
 
 /**
  * 统一响应封装
  */
-export interface RListBucketFileVO {
+export interface RPageAdminTaskLog {
   /** 状态码 */
   code?: number;
   /** 状态消息 */
   message?: string;
-  /** 响应数据 */
-  data?: BucketFileVO[];
+  data?: PageAdminTaskLog;
 }

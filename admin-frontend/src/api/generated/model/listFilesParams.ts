@@ -7,5 +7,10 @@
  */
 
 export type ListFilesParams = {
-prefix?: string;
+pageNum?: number;
+pageSize?: number;
+bucket?: string;
+category?: string;
+status?: string;
+keyword?: string;
 };
