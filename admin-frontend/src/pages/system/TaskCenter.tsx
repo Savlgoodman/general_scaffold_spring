@@ -20,8 +20,18 @@ import { Play, RefreshCw, Pencil, Eye } from 'lucide-react'
 import { getTasks } from '@/api/generated/tasks/tasks'
 import type { AdminTaskConfig, AdminTaskLog } from '@/api/generated/model'
 import { TableSkeleton } from '@/components/skeletons'
+import cronstrue from 'cronstrue/i18n'
 
 const tasksApi = getTasks()
+
+function describeCron(cron?: string): string {
+  if (!cron) return '-'
+  try {
+    return cronstrue.toString(cron, { locale: 'zh_CN', use24HourTimeFormat: true })
+  } catch {
+    return '无效表达式'
+  }
+}
 
 const statusBadge: Record<string, { label: string; variant: 'default' | 'destructive' | 'secondary' }> = {
   success: { label: '成功', variant: 'default' },
@@ -169,7 +179,10 @@ export default function TaskCenter() {
                           {c.description && <p className="text-xs text-muted-foreground mt-0.5">{c.description}</p>}
                         </TableCell>
                         <TableCell className="text-center py-2.5"><Badge variant="outline" className="text-xs">{groupLabels[c.taskGroup ?? ''] ?? c.taskGroup}</Badge></TableCell>
-                        <TableCell className="text-center py-2.5 font-mono text-xs">{c.cronExpression}</TableCell>
+                        <TableCell className="text-center py-2.5">
+                          <div className="font-mono text-xs">{c.cronExpression}</div>
+                          <div className="text-[11px] text-muted-foreground mt-0.5">{describeCron(c.cronExpression)}</div>
+                        </TableCell>
                         <TableCell className="text-center py-2.5">
                           <Switch checked={c.enabled === 1} onCheckedChange={() => handleToggleEnabled(c)} />
                         </TableCell>
@@ -287,6 +300,7 @@ export default function TaskCenter() {
             <div className="grid gap-2">
               <Label>Cron 表达式</Label>
               <Input value={editCron} onChange={(e) => setEditCron(e.target.value)} placeholder="0 0 3 * * ?" className="font-mono" />
+              <p className="text-xs text-primary mt-1">{describeCron(editCron)}</p>
               <p className="text-xs text-muted-foreground">修改后下次触发即生效，无需重启</p>
             </div>
             <div className="grid gap-2">
