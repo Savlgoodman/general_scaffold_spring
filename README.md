@@ -119,12 +119,20 @@ general_scaffold_spring/
 - 分组管理（站点品牌/安全策略/外观设置）
 - 支持图片上传（Logo/Favicon/背景图）
 
-### 文件存储
+### 文件管理
 
-- MinIO 对象存储集成
-- 文件上传/下载/删除
-- 桶存储管理页面（文件浏览/预览/分类）
-- 头像上传 + 裁剪
+- MinIO 对象存储集成（私有桶 + presigned URL 访问控制）
+- 文件中心：上传/分类/详情/回收站/恢复/彻底删除
+- 头像上传 + 裁剪（公开读目录，长期有效 URL）
+- 孤儿文件检测（扫描无引用文件自动回收）
+- 文件生命周期：active → recycled → deleted
+
+### 定时任务
+
+- 动态调度（`SchedulingConfigurer` + 数据库 Cron，修改实时生效无需重启）
+- 6 个内置任务：4 类日志清理 + 孤儿文件扫描 + 回收站清空
+- 统一执行入口 + 自动记录执行日志
+- 前端调度中心：在线编辑 Cron、启停、手动触发、查看执行日志
 
 ### 前端体验
 
@@ -201,7 +209,7 @@ npm run dev
 
 | 类型 | 文档 |
 |------|------|
-| **SYSTEM** | [架构与代码规范](./docs/SYSTEM_ARCHITECTURE_AND_CONVENTIONS.md) · [认证安全](./docs/SYSTEM_AUTH_AND_SECURITY.md) · [RBAC 权限](./docs/SYSTEM_RBAC_PERMISSION.md) · [菜单管理](./docs/SYSTEM_MENU_MANAGEMENT.md) · [日志审计](./docs/SYSTEM_LOGGING_AND_AUDIT.md) · [异常处理](./docs/SYSTEM_EXCEPTION_HANDLING.md) · [通知公告](./docs/SYSTEM_NOTICE_AND_NOTIFICATION.md) · [监控仪表盘](./docs/SYSTEM_MONITORING_AND_DASHBOARD.md) |
+| **SYSTEM** | [架构与代码规范](./docs/SYSTEM_ARCHITECTURE_AND_CONVENTIONS.md) · [认证安全](./docs/SYSTEM_AUTH_AND_SECURITY.md) · [RBAC 权限](./docs/SYSTEM_RBAC_PERMISSION.md) · [菜单管理](./docs/SYSTEM_MENU_MANAGEMENT.md) · [日志审计](./docs/SYSTEM_LOGGING_AND_AUDIT.md) · [异常处理](./docs/SYSTEM_EXCEPTION_HANDLING.md) · [通知公告](./docs/SYSTEM_NOTICE_AND_NOTIFICATION.md) · [监控仪表盘](./docs/SYSTEM_MONITORING_AND_DASHBOARD.md) · [文件管理](./docs/SYSTEM_FILE_MANAGEMENT.md) · [定时任务](./docs/SYSTEM_TASK_SCHEDULER.md) |
 | **GUIDE** | [基础开发流程](./docs/GUIDE_DEVELOPMENT_WORKFLOW.md) |
 | **DESIGN** | [中间件重构](./docs/DESIGN_BACKEND_MIDDLEWARE_REFACTOR.md) · [日志实现](./docs/DESIGN_LOGGING_SYSTEM_IMPLEMENTATION.md) · [在线会话](./docs/DESIGN_ONLINE_USER_SESSION_MANAGEMENT.md) · [系统配置](./docs/DESIGN_SYSTEM_CONFIG.md) |
 

@@ -48,6 +48,8 @@
 - [SYSTEM_EXCEPTION_HANDLING.md](./SYSTEM_EXCEPTION_HANDLING.md) — 异常处理体系：全局异常处理器、统一响应格式、BusinessException、安全原则、前端错误处理
 - [SYSTEM_NOTICE_AND_NOTIFICATION.md](./SYSTEM_NOTICE_AND_NOTIFICATION.md) — 通知公告系统：草稿/发布/撤回生命周期、多场景前端消费、偏好设置集成
 - [SYSTEM_MONITORING_AND_DASHBOARD.md](./SYSTEM_MONITORING_AND_DASHBOARD.md) — 监控与仪表盘：系统监控、仪表盘统计、在线用户管理
+- [SYSTEM_FILE_MANAGEMENT.md](./SYSTEM_FILE_MANAGEMENT.md) — 文件管理系统：MinIO 存储策略、presigned URL、回收站、孤儿检测、文件生命周期
+- [SYSTEM_TASK_SCHEDULER.md](./SYSTEM_TASK_SCHEDULER.md) — 定时任务调度：动态 Cron、统一执行入口、执行日志、任务注册与扩展
 
 ---
 
