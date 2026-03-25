@@ -67,12 +67,12 @@ COMMENT ON COLUMN admin_system_config.group_name   IS '配置分组：basic / se
 
 #### 外观设置（group: `appearance`）
 
-| config_key | 默认值 | 说明 |
-|------------|--------|------|
-| `default_theme` | `system` | 新用户默认主题（light / dark / warm / system） |
-| `sidebar_collapsed` | `false` | 侧边栏默认是否收起 |
-| `login_bg_image` | `""` | 登录页背景图 URL |
-| `login_welcome_text` | `欢迎回来` | 登录页欢迎文字 |
+| config_key           | 默认值　　 | 说明　　　　　　　　　　　　　　　　　　　　　 |
+| ----------------------| ------------| ------------------------------------------------|
+| `default_theme`      | `system`　 | 新用户默认主题（light / dark / warm / system） |
+| `sidebar_collapsed`  | `false`　　| 侧边栏默认是否收起　　　　　　　　　　　　　　 |
+| `login_bg_image`     | `""`　　　 | 登录页背景图 URL　　　　　　　　　　　　　　　 |
+| `login_welcome_text` | `欢迎回来` | 登录页欢迎文字　　　　　　　　　　　　　　　　 |
 
 ---
 
@@ -236,12 +236,12 @@ interface SiteConfigStore {
 
 **消费方改造：**
 
-| 组件 | 当前实现 | 改造后 |
-|------|---------|--------|
-| `AppSidebar.tsx` | 硬编码 "Admin" + "管理系统" | 读取 `siteName` + `siteSubtitle` |
-| `AppSidebar.tsx` | 硬编码 `<LayoutDashboard>` 图标 | 读取 `siteLogo`，有值时展示 `<img>`，否则保留默认图标 |
-| `index.html` | 静态 `<title>Admin Platform</title>` | 由 `App.tsx` ��过 `document.title` 动态设置 |
-| 登录页 | 固定欢迎文字 | 读取 `loginWelcomeText` + `loginBgImage` |
+| 组件　　　　　　 | 当前实现　　　　　　　　　　　　　　 | 改造后　　　　　　　　　　　　　　　　　　　　　　　　|
+| ------------------| --------------------------------------| -------------------------------------------------------|
+| `AppSidebar.tsx` | 硬编码 "Admin" + "管理系统"　　　　　| 读取 `siteName` + `siteSubtitle`　　　　　　　　　　　|
+| `AppSidebar.tsx` | 硬编码 `<LayoutDashboard>` 图标　　　| 读取 `siteLogo`，有值时展示 `<img>`，否则保留默认图标 |
+| `index.html`　　 | 静态 `<title>Admin Platform</title>` | 由 `App.tsx` 通过 `document.title` 动态设置　　　　　 |
+| 登录页　　　　　 | 固定欢迎文字　　　　　　　　　　　　 | 读取 `loginWelcomeText` + `loginBgImage`　　　　　　　|
 
 ---
 

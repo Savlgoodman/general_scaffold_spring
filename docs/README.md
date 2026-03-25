@@ -40,7 +40,14 @@
 
 > 描述系统各模块的现状、功能范围、数据模型等。
 
+- [SYSTEM_ARCHITECTURE_AND_CONVENTIONS.md](./SYSTEM_ARCHITECTURE_AND_CONVENTIONS.md) — 系统架构与代码规范总览：前后端技术栈、分层架构、编码约定、协作流程
 - [SYSTEM_MENU_MANAGEMENT.md](./SYSTEM_MENU_MANAGEMENT.md) — 菜单管理系统：树形菜单设计、角色关联、动画渲染、开发者模式
+- [SYSTEM_RBAC_PERMISSION.md](./SYSTEM_RBAC_PERMISSION.md) — RBAC 权限管理：三层权限模型、数据模型、鉴权流程、权限同步、超级管理员特权
+- [SYSTEM_LOGGING_AND_AUDIT.md](./SYSTEM_LOGGING_AND_AUDIT.md) — 日志与审计体系：API 请求日志、登录日志、操作审计、异常日志、异步写入、自动清理
+- [SYSTEM_AUTH_AND_SECURITY.md](./SYSTEM_AUTH_AND_SECURITY.md) — 认证与安全体系：JWT 双 Token、登录/登出/刷新流程、安全过滤器链、在线用户管理、Redis Key 设计
+- [SYSTEM_EXCEPTION_HANDLING.md](./SYSTEM_EXCEPTION_HANDLING.md) — 异常处理体系：全局异常处理器、统一响应格式、BusinessException、安全原则、前端错误处理
+- [SYSTEM_NOTICE_AND_NOTIFICATION.md](./SYSTEM_NOTICE_AND_NOTIFICATION.md) — 通知公告系统：草稿/发布/撤回生命周期、多场景前端消费、偏好设置集成
+- [SYSTEM_MONITORING_AND_DASHBOARD.md](./SYSTEM_MONITORING_AND_DASHBOARD.md) — 监控与仪表盘：系统监控、仪表盘统计、在线用户管理
 
 ---
 
@@ -69,7 +76,7 @@
 
 > 部署手册、开发环境搭建、常用操作流程等。
 
-（暂无文档）
+- [GUIDE_DEVELOPMENT_WORKFLOW.md](./GUIDE_DEVELOPMENT_WORKFLOW.md) — 基础开发流程：从 Flyway 建表到实体/接口创建、API 生成、前端对接的完整步骤
 
 ---
 
