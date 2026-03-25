@@ -91,7 +91,7 @@ def main():
     print(f"🪣 MinIO: {endpoint} / {bucket_name}")
     print()
 
-    # 1. 获取 admin_file ��中已有��� object_name
+    # 1. 获取 admin_file 表中已有的 object_name
     cursor = conn.cursor()
     cursor.execute("SELECT object_name FROM admin_file WHERE is_deleted = 0")
     existing = set(row[0] for row in cursor.fetchall())

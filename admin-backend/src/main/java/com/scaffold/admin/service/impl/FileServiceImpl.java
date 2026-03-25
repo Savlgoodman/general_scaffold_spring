@@ -76,7 +76,7 @@ public class FileServiceImpl implements FileService {
     @Override
     public FileUploadVO uploadAvatar(MultipartFile file) {
         if (file.isEmpty()) throw new BusinessException(ResultCode.PARAM_ERROR, "文件不能为空");
-        if (file.getSize() > MAX_AVATAR_SIZE) throw new BusinessException(ResultCode.PARAM_ERROR, "��像大小不能超过2MB");
+        if (file.getSize() > MAX_AVATAR_SIZE) throw new BusinessException(ResultCode.PARAM_ERROR, "头像大小不能超过2MB");
         String contentType = file.getContentType();
         if (contentType == null || !AVATAR_TYPES.contains(contentType.toLowerCase()))
             throw new BusinessException(ResultCode.PARAM_ERROR, "头像仅支持 jpg/png/gif/webp 格式");
@@ -118,7 +118,7 @@ public class FileServiceImpl implements FileService {
     @Transactional
     public void recycleFile(Long id) {
         AdminFile file = fileMapper.selectById(id);
-        if (file == null) throw new BusinessException(ResultCode.NOT_FOUND, "文件不存��");
+        if (file == null) throw new BusinessException(ResultCode.NOT_FOUND, "文件不存在");
         if (!"active".equals(file.getStatus())) throw new BusinessException(ResultCode.PARAM_ERROR, "仅活跃文件可移入回收站");
         file.setStatus("recycled");
         file.setDeletedAt(LocalDateTime.now());

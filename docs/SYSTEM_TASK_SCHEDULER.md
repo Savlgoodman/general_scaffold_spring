@@ -32,7 +32,7 @@ TaskExecutorService (统一执行入口)
 
 ### 为什么不用 @Scheduled
 
-`@Scheduled` 注解的 Cron 表达式在���译时固定，运行时无法修改。本系统使用 Spring 的 `SchedulingConfigurer` 接口实现动态调度。
+`@Scheduled` 注解的 Cron 表达式在编译时固定，运行时无法修改。本系统使用 Spring 的 `SchedulingConfigurer` 接口实现动态调度。
 
 ### DynamicTaskScheduler
 
@@ -90,11 +90,11 @@ public class DynamicTaskScheduler implements SchedulingConfigurer {
 | duration_ms | BIGINT | 执行耗时（毫秒） |
 | detail | TEXT | 执行结果描述（如"清理 API 日志 1234 条"） |
 
-## 四、��置任务清单
+## 四、内置任务清单
 
 | taskName | 显示名 | 分组 | 默认 Cron | 说明 |
 |----------|--------|------|-----------|------|
-| `api-log-cleanup` | API日志清理 | log | `0 0 3 * * ?` | 删除 N 天前的 API ��求日志 |
+| `api-log-cleanup` | API日志清理 | log | `0 0 3 * * ?` | 删除 N 天前的 API 请求日志 |
 | `operation-log-cleanup` | 操作日志清理 | log | `0 30 3 * * ?` | 删除 N 天前的操作审计日志 |
 | `login-log-cleanup` | 登录日志清理 | log | `0 0 4 * * ?` | 删除 N 天前的登录日志 |
 | `error-log-cleanup` | 异常日志清理 | log | `0 30 4 * * ?` | 删除 N 天前的异常日志 |

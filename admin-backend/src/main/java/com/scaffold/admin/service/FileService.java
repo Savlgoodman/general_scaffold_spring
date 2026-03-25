@@ -18,7 +18,7 @@ public interface FileService {
     /** 头像上传（限图片 ≤2MB，category=avatar） */
     FileUploadVO uploadAvatar(MultipartFile file);
 
-    /** 分页查询文���记录 */
+    /** 分页查询文件记录 */
     Page<AdminFile> listFiles(Integer pageNum, Integer pageSize, String bucket, String category, String status, String keyword);
 
     /** 移入回收站 */

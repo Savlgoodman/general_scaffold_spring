@@ -84,7 +84,7 @@ export default function Login() {
             : 'linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--primary) / 0.7) 100%)',
         }}
       >
-        {/* ���罩层 */}
+        {/* 遮罩层 */}
         {config.login_bg_image && <div className="absolute inset-0 bg-black/40" />}
 
         {/* Logo + 站点名 */}
