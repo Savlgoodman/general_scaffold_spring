@@ -6,7 +6,9 @@ import com.scaffold.admin.annotation.OperationLog;
 import com.scaffold.admin.common.BusinessException;
 import com.scaffold.admin.common.ResultCode;
 import com.scaffold.admin.model.enums.OperationType;
+import com.scaffold.admin.mapper.AdminFileMapper;
 import com.scaffold.admin.mapper.AdminUserMapper;
+import com.scaffold.admin.model.entity.AdminFile;
 import com.scaffold.admin.model.dto.CreateAdminUserDTO;
 import com.scaffold.admin.model.dto.UpdateAdminUserDTO;
 import com.scaffold.admin.model.entity.AdminUser;
@@ -31,6 +33,7 @@ import java.util.List;
 public class AdminUserServiceImpl implements AdminUserService {
 
     private final AdminUserMapper adminUserMapper;
+    private final AdminFileMapper adminFileMapper;
     private final PasswordEncoder passwordEncoder;
 
     @Override
@@ -186,6 +189,20 @@ public class AdminUserServiceImpl implements AdminUserService {
         AdminUser user = adminUserMapper.selectById(userId);
         if (user == null) {
             throw new BusinessException(ResultCode.NOT_FOUND, "用户不存在");
+        }
+        // 标记旧头像为回收
+        String oldAvatar = user.getAvatar();
+        if (oldAvatar != null && !oldAvatar.isBlank()) {
+            List<AdminFile> oldFiles = adminFileMapper.selectList(
+                new LambdaQueryWrapper<AdminFile>()
+                    .eq(AdminFile::getUrl, oldAvatar)
+                    .eq(AdminFile::getStatus, "active")
+            );
+            for (AdminFile f : oldFiles) {
+                f.setStatus("recycled");
+                f.setDeletedAt(java.time.LocalDateTime.now());
+                adminFileMapper.updateById(f);
+            }
         }
         user.setAvatar(avatarUrl);
         adminUserMapper.updateById(user);
