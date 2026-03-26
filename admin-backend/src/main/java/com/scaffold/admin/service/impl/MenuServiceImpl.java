@@ -154,6 +154,10 @@ public class MenuServiceImpl implements MenuService {
         }
         // 递归删除子菜单
         deleteChildren(id);
+        // 清理角色-菜单关联
+        roleMenuMapper.delete(
+            new LambdaQueryWrapper<AdminRoleMenu>().eq(AdminRoleMenu::getMenuId, id)
+        );
         menuMapper.deleteById(id);
     }
 
@@ -465,6 +469,9 @@ public class MenuServiceImpl implements MenuService {
         );
         for (AdminMenu child : children) {
             deleteChildren(child.getId());
+            roleMenuMapper.delete(
+                new LambdaQueryWrapper<AdminRoleMenu>().eq(AdminRoleMenu::getMenuId, child.getId())
+            );
             menuMapper.deleteById(child.getId());
         }
     }
