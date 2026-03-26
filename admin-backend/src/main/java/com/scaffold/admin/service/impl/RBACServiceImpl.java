@@ -51,6 +51,7 @@ public class RBACServiceImpl implements RBACService {
             new LambdaQueryWrapper<AdminRole>()
                 .in(AdminRole::getId, roleIds)
                 .eq(AdminRole::getIsDeleted, 0)
+                .eq(AdminRole::getStatus, 1) // 过滤禁用角色
         );
     }
 

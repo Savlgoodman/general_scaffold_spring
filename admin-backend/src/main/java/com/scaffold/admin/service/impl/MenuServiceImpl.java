@@ -61,9 +61,9 @@ public class MenuServiceImpl implements MenuService {
             return Collections.emptyList();
         }
         List<Long> rawRoleIds = userRoles.stream().map(AdminUserRole::getRoleId).toList();
-        // 过滤已删除角色
+        // 过滤已删除和禁用角色
         List<AdminRole> activeRoles = roleMapper.selectList(
-                new LambdaQueryWrapper<AdminRole>().in(AdminRole::getId, rawRoleIds)
+                new LambdaQueryWrapper<AdminRole>().in(AdminRole::getId, rawRoleIds).eq(AdminRole::getStatus, 1)
         );
         List<Long> roleIds = activeRoles.stream().map(AdminRole::getId).toList();
         if (roleIds.isEmpty()) {
@@ -330,7 +330,7 @@ public class MenuServiceImpl implements MenuService {
         );
         List<Long> rawRoleIds = userRoles.stream().map(AdminUserRole::getRoleId).toList();
         List<AdminRole> roles = rawRoleIds.isEmpty() ? Collections.emptyList() :
-                roleMapper.selectList(new LambdaQueryWrapper<AdminRole>().in(AdminRole::getId, rawRoleIds));
+                roleMapper.selectList(new LambdaQueryWrapper<AdminRole>().in(AdminRole::getId, rawRoleIds).eq(AdminRole::getStatus, 1));
         List<Long> roleIds = roles.stream().map(AdminRole::getId).toList();
 
         List<RoleBaseVO> roleVOs = roles.stream().map(r -> {
