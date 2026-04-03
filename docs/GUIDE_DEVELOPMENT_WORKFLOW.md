@@ -1,468 +1,217 @@
-# 基础开发流程指南
+# 开发流程指南
 
 > 创建日期：2026-03-25
-> 最后更新：2026-03-25
+> 最后更新：2026-04-03
 
-## 概述
+## 适用范围
 
-本文档描述从新增数据库表到前后端完整对接的标准开发流程。适用于在本脚手架上新增业务功能模块的场景。
+本文档描述本项目的标准开发流程，重点覆盖：
 
----
+- 前后端协作节奏
+- 后端 OpenAPI 注解规范
+- 前端 generated API 调用规范
+- 页面路由注册方式
+- 常见开发检查清单
 
-## 完整流程总览
+如果你只是第一次把项目跑起来，先看根目录 `QUICK_START.md`。
 
-```
-1. Flyway 建表
-    ↓
-2. 创建实体 Entity
-    ↓
-3. 创建 Mapper
-    ↓
-4. 创建 DTO / VO
-    ↓
-5. 创建 Service 接口 + 实现
-    ↓
-6. 创建 Controller（含 OpenAPI 注解）
-    ↓
-7. mvn compile 验证
-    ↓
-8. npm run generate:api（前端生成 API）
-    ↓
-9. 前端页面开发 + 对接 API
-    ↓
-10. 路由注册 + 提交代码
-```
+## 前后端协作开发流程
 
----
+### 核心流程：后端先行，API 生成驱动前端
 
-## Step 1: Flyway 数据库迁移
+1. **后端开发接口** — 编写 Controller / Service / VO / DTO，确保所有字段标注 `@Schema` 注解
+2. **后端编译验证** — 执行 `mvn compile`，确认接口和模型定义无误
+3. **用户生成前端 API** — 等待用户运行 `npm run generate:api`，不要自行执行该命令
+4. **前端对接** — 使用 `src/api/generated/` 中生成的函数和类型直接接入页面
 
-在 `admin-backend/src/main/resources/db/migration/` 下新建 SQL 文件。
+## 后端开发规范
 
-### 命名规则
+### 1. 数据库变更
 
-```
+新增表结构或字段时，在 `admin-backend/src/main/resources/db/migration/` 下新增 Flyway 脚本：
+
+```text
 V{版本号}__{描述}.sql
 ```
 
-- 版本号递增（查看已有文件确定下一个版本号）
-- 双下划线 `__` 分隔版本号和描述
-- 描述用英文下划线连接
+约定：
 
-### 示例
+- 管理后台业务表统一使用 `admin_` 前缀
+- 基础表字段通常包含 `id`、`create_time`、`update_time`、`is_deleted`
+- 启动后端时 Flyway 会自动执行未运行的迁移脚本
 
-```sql
--- V12__create_admin_article_table.sql
+### 2. Entity / DTO / VO
 
-CREATE TABLE admin_article (
-    id          BIGSERIAL PRIMARY KEY,
-    title       VARCHAR(200)  NOT NULL,
-    content     TEXT,
-    status      INTEGER       NOT NULL DEFAULT 0,
-    author_id   BIGINT,
-    create_time TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    update_time TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    is_deleted  INTEGER       NOT NULL DEFAULT 0
-);
+要求：
 
-COMMENT ON TABLE admin_article IS '文章表';
-COMMENT ON COLUMN admin_article.title IS '标题';
-COMMENT ON COLUMN admin_article.status IS '状态（0-草稿 1-已发布）';
-```
+- Entity 继承 `BaseEntity`
+- Entity 使用 `@TableName`
+- DTO / VO / Entity 的业务字段都要补 `@Schema(description = "...")`
+- DTO 使用 JSR-303 校验注解时，Controller 入参同步加 `@Valid`
 
-### 注意事项
+特别注意：
 
-- 所有管理后台表以 `admin_` 为前缀
-- 必须包含 `id`、`create_time`、`update_time`、`is_deleted` 四个基础字段
-- `is_deleted` 用于逻辑删除（0=未删除，1=已删除）
-- 启动后端时 Flyway 自动执行未运行的迁移脚本
+- **内部类命名必须唯一**
+- 不同 VO 中的内部类不能重名，例如不要同时出现多个 `Summary`、`GroupSection`
+- 命名规范建议为 `{父类前缀}{内部类名}`，例如 `UserPermGroupSection`
 
----
+### 3. Mapper / Service
 
-## Step 2: 创建实体 Entity
+要求：
 
-在 `model/entity/` 下创建实体类，继承 `BaseEntity`。
+- Mapper 继承 `BaseMapper<T>`
+- Service 实现类优先使用 `@RequiredArgsConstructor` + `final` 注入
+- 所有 CUD（增删改）类 Service 方法，按需标注 `@OperationLog`
+
+操作审计示例：
 
 ```java
-package com.scaffold.admin.model.entity;
+@OperationLog(module = "用户管理", type = OperationType.CREATE)
+public AdminUser createUser(CreateAdminUserDTO dto) { ... }
 
-import com.baomidou.mybatisplus.annotation.TableName;
-import com.scaffold.admin.common.BaseEntity;
-import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
+@OperationLog(module = "角色管理", type = OperationType.DELETE, description = "批量删除")
+public void deleteRoles(List<Long> ids) { ... }
+```
 
-@Schema(description = "文章")
-@EqualsAndHashCode(callSuper = true)
-@Data
-@TableName("admin_article")
-public class AdminArticle extends BaseEntity {
+逻辑删除注意事项：
 
-    @Schema(description = "标题")
-    private String title;
+- 删除数据时使用 `mapper.delete()`、`mapper.deleteById()`、`mapper.deleteBatchIds()`
+- 不要手动 `setIsDeleted(1)` 再 `updateById()`
+- 不要用 `LambdaUpdateWrapper.set(...isDeleted, 1)` 模拟删除
 
-    @Schema(description = "内容")
-    private String content;
+### 4. Controller 与 OpenAPI
 
-    @Schema(description = "状态（0-草稿 1-已发布）")
-    private Integer status;
+Controller 必须补齐 OpenAPI 注解，否则会直接影响 orval 生成结果。
 
-    @Schema(description = "作者ID")
-    private Long authorId;
+要求：
+
+- Controller 类必须有 `@Tag(name = "英文tag名", description = "...")`
+- Controller 方法必须有 `@Operation(operationId = "...", summary = "...")`
+- DTO / VO 字段必须有 `@Schema(description = "...")`
+
+`operationId` 命名规范：
+
+- 格式：`{动词}{资源}`
+- 示例：`listRoles`、`getUserDetail`、`syncRolePermissions`
+
+还要确认：
+
+- `application.yml` 中保留 `springdoc.default-produces-media-type: application/json`
+- 否则 orval 可能把返回类型生成为 `Blob`
+
+## 前端对接规范
+
+### 1. generated API 使用规则
+
+- **必须使用 generated endpoint 函数**
+- 不手写新的 API 文件
+- generated 代码采用工厂模式
+
+示例：
+
+```ts
+const rolesApi = getRoles()
+const res = await rolesApi.listRoles(params)
+
+if (res.code === 200 && res.data) {
+  // use res.data
 }
 ```
 
-### 要点
+注意：
 
-- 继承 `BaseEntity`（自动获得 id、createTime、updateTime、isDeleted）
-- `@TableName` 对应数据库表名
-- `@Data` + `@EqualsAndHashCode(callSuper = true)` 标准 Lombok 组合
-- 每个字段必须有 `@Schema(description = "...")` 注解
+- 返回值是 `R<T>` 包装：`{ code, message, data }`
+- 判断成功时使用 `res.code === 200 && res.data`
+- generated 类型字段默认都是 optional，使用时注意 `?? fallback` 或 `!` 断言
+- 自定义 axios 实例位于 `src/api/custom-instance.ts`
 
----
+### 2. API 生成规则
 
-## Step 3: 创建 Mapper
-
-在 `mapper/` 下创建 Mapper 接口。
-
-```java
-package com.scaffold.admin.mapper;
-
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.scaffold.admin.model.entity.AdminArticle;
-import org.apache.ibatis.annotations.Mapper;
-
-@Mapper
-public interface AdminArticleMapper extends BaseMapper<AdminArticle> {
-}
-```
-
-继承 `BaseMapper<T>` 后自动获得：`insert`、`selectById`、`selectList`、`selectPage`、`selectCount`、`updateById`、`deleteById`、`deleteBatchIds` 等方法。
-
-如需自定义 SQL，在 `resources/mapper/` 下创建同名 XML 文件。
-
----
-
-## Step 4: 创建 DTO / VO
-
-### DTO（请求参数）
-
-```java
-// model/dto/CreateArticleDTO.java
-@Schema(description = "创建文章请求")
-@Data
-public class CreateArticleDTO {
-
-    @Schema(description = "标题")
-    @NotBlank(message = "标题不能为空")
-    private String title;
-
-    @Schema(description = "内容")
-    private String content;
-}
-```
-
-### VO（响应对象）
-
-```java
-// model/vo/ArticleVO.java
-@Schema(description = "文章信息")
-@Data
-public class ArticleVO {
-
-    @Schema(description = "文章ID")
-    private Long id;
-
-    @Schema(description = "标题")
-    private String title;
-
-    @Schema(description = "内容")
-    private String content;
-
-    @Schema(description = "状态")
-    private Integer status;
-
-    @Schema(description = "创建时间")
-    private LocalDateTime createTime;
-}
-```
-
-### 注意事项
-
-- 所有字段必须有 `@Schema(description = "...")` — 这是前端 API 生成的依据
-- VO 内部类命名加父类前缀（如 `ArticleVOAuthorInfo`），避免 orval 合并同名类
-- DTO 使用 `@Valid` + JSR-303 校验注解（`@NotBlank`、`@NotNull`、`@Size` 等）
-
----
-
-## Step 5: 创建 Service
-
-### 接口
-
-```java
-// service/ArticleService.java
-public interface ArticleService {
-    PageResult<ArticleVO> listArticles(int pageNum, int pageSize, String keyword);
-    ArticleVO getArticleDetail(Long id);
-    void createArticle(CreateArticleDTO dto);
-    void updateArticle(Long id, UpdateArticleDTO dto);
-    void deleteArticle(Long id);
-}
-```
-
-### 实现
-
-```java
-// service/impl/ArticleServiceImpl.java
-@Service
-@RequiredArgsConstructor
-public class ArticleServiceImpl implements ArticleService {
-
-    private final AdminArticleMapper adminArticleMapper;
-
-    @Override
-    public PageResult<ArticleVO> listArticles(int pageNum, int pageSize, String keyword) {
-        LambdaQueryWrapper<AdminArticle> wrapper = new LambdaQueryWrapper<>();
-        if (StringUtils.hasText(keyword)) {
-            wrapper.like(AdminArticle::getTitle, keyword);
-        }
-        wrapper.orderByDesc(AdminArticle::getCreateTime);
-
-        Page<AdminArticle> page = adminArticleMapper.selectPage(
-                new Page<>(pageNum, pageSize), wrapper);
-
-        List<ArticleVO> records = page.getRecords().stream()
-                .map(this::toVO)
-                .collect(Collectors.toList());
-
-        return new PageResult<>(page.getTotal(), records, page.getCurrent(), page.getSize());
-    }
-
-    @Override
-    @OperationLog(module = "文章管理", type = OperationType.CREATE)
-    public void createArticle(CreateArticleDTO dto) {
-        AdminArticle article = new AdminArticle();
-        article.setTitle(dto.getTitle());
-        article.setContent(dto.getContent());
-        article.setStatus(0); // 草稿
-        article.setAuthorId(SecurityUtils.getCurrentUserId());
-        adminArticleMapper.insert(article);
-    }
-
-    @Override
-    @OperationLog(module = "文章管理", type = OperationType.DELETE)
-    public void deleteArticle(Long id) {
-        // MyBatis-Plus 自动处理逻辑删除
-        adminArticleMapper.deleteById(id);
-    }
-
-    private ArticleVO toVO(AdminArticle entity) { /* 字段映射 */ }
-}
-```
-
-### 要点
-
-- `@RequiredArgsConstructor` + `final` 字段注入
-- CUD 方法标注 `@OperationLog` 审计注解
-- 业务校验失败抛 `BusinessException`
-- 删除用 `mapper.deleteById()`（不要 `setIsDeleted(1)` + `updateById()`）
-
----
-
-## Step 6: 创建 Controller
-
-```java
-// controller/ArticleController.java
-@Tag(name = "articles", description = "文章管理")
-@RestController
-@RequestMapping("/api/admin/articles")
-@RequiredArgsConstructor
-public class ArticleController {
-
-    private final ArticleService articleService;
-
-    @Operation(operationId = "listArticles", summary = "文章列表")
-    @GetMapping
-    public R<PageResult<ArticleVO>> list(
-            @RequestParam(defaultValue = "1") Integer pageNum,
-            @RequestParam(defaultValue = "10") Integer pageSize,
-            @RequestParam(required = false) String keyword) {
-        return R.ok(articleService.listArticles(pageNum, pageSize, keyword));
-    }
-
-    @Operation(operationId = "getArticleDetail", summary = "文章详情")
-    @GetMapping("/{id}")
-    public R<ArticleVO> detail(@PathVariable Long id) {
-        return R.ok(articleService.getArticleDetail(id));
-    }
-
-    @Operation(operationId = "createArticle", summary = "创建文章")
-    @PostMapping
-    public R<Void> create(@RequestBody @Valid CreateArticleDTO dto) {
-        articleService.createArticle(dto);
-        return R.ok();
-    }
-
-    @Operation(operationId = "updateArticle", summary = "更新文章")
-    @PutMapping("/{id}")
-    public R<Void> update(@PathVariable Long id, @RequestBody @Valid UpdateArticleDTO dto) {
-        articleService.updateArticle(id, dto);
-        return R.ok();
-    }
-
-    @Operation(operationId = "deleteArticle", summary = "删除文章")
-    @DeleteMapping("/{id}")
-    public R<Void> delete(@PathVariable Long id) {
-        articleService.deleteArticle(id);
-        return R.ok();
-    }
-}
-```
-
-### OpenAPI 注解要点
-
-| 注解位置 | 注解 | 必填 | 说明 |
-|----------|------|------|------|
-| 类 | `@Tag(name = "英文tag")` | 是 | orval 按 tag 分目录生成 |
-| 方法 | `@Operation(operationId = "...")` | 是 | 决定前端函数名 |
-| 方法 | `@Operation(summary = "...")` | 是 | 接口简述 |
-| 参数 | `@Schema(description = "...")` | 是 | 字段描述 |
-
-**operationId 命名规范：** `{动词}{资源}`（如 `listArticles`、`getArticleDetail`、`createArticle`、`deleteArticle`）
-
----
-
-## Step 7: 后端编译验证
-
-```bash
-mvn compile
-```
-
-确认无编译错误后，启动后端：
-
-```bash
-mvn spring-boot:run
-```
-
-可访问 Swagger UI 验证接口：`http://localhost:8080/swagger-ui.html`
-
----
-
-## Step 8: 前端生成 API
+后端接口完成并通过编译后，由用户执行：
 
 ```bash
 cd admin-frontend
 npm run generate:api
 ```
 
-Orval 读取后端 OpenAPI spec（`http://localhost:8080/api-docs`），自动在 `src/api/generated/` 下生成：
+说明：
 
-```
-src/api/generated/
-├── articles/
-│   └── articles.ts        # 工厂函数 getArticles()
-└── model/
-    ├── articleVO.ts        # 类型定义
-    ├── createArticleDTO.ts
-    └── ...
-```
+- orval 读取 `http://localhost:8080/api-docs`
+- 生成代码目录为 `src/api/generated/`
+- **不要自行运行该命令，等待用户执行**
 
----
+### 3. operationId 变更后的前端处理
 
-## Step 9: 前端页面开发
+后端修改 `operationId` 后，前端重新生成 API，函数名通常会变化。
 
-### 创建页面组件
+常见变化：
 
-```tsx
-// src/pages/system/ArticleManagement.tsx
-import { getArticles } from "@/api/generated/articles/articles"
-import type { ArticleVO } from "@/api/generated/model"
+- `list` → `listRoles`
+- `getDetail` → `getRoleDetail`
+- `_delete` → `deleteRole`
 
-const articlesApi = getArticles()
+处理方式：
 
-function ArticleManagement() {
-  const [data, setData] = useState<ArticleVO[]>([])
+1. 全局搜索旧函数名
+2. 替换为新生成的函数名
+3. 执行 `npx tsc --noEmit` 检查类型错误
 
-  const fetchList = useCallback(async () => {
-    const res = await articlesApi.listArticles({ pageNum: 1, pageSize: 10 })
-    if (res.code === 200 && res.data) {
-      setData(res.data.records ?? [])
-    }
-  }, [])
+## 前端页面与路由注册
 
-  useEffect(() => { fetchList() }, [fetchList])
+### 单一数据源
 
-  return (
-    <div className="space-y-6 max-w-7xl mx-auto">
-      {/* 页面内容 */}
-    </div>
-  )
-}
-```
+受保护页面路由统一注册在 `admin-frontend/src/routes.tsx` 的 `appRoutes` 数组中。
 
-### API 调用模式
+新增页面步骤：
+
+1. 在 `src/pages/` 下创建页面组件
+2. 在 `src/routes.tsx` 的 `appRoutes` 数组中添加一条路由
+3. 完成后 React Router 和开发者模式菜单会自动生效
+4. 如需普通角色可见，再到后端菜单表配置并分配权限
+
+示例：
 
 ```tsx
-// 实例化工厂
-const articlesApi = getArticles()
-
-// 调用（返回 R<T> 包装）
-const res = await articlesApi.listArticles({ pageNum, pageSize, keyword })
-if (res.code === 200 && res.data) {
-  // res.data 是 PageResult<ArticleVO>
-  setData(res.data.records ?? [])
-  setTotal(res.data.total ?? 0)
-}
-```
-
-**注意：** generated 类型所有字段都是 optional，使用时需 `?? fallback` 或 `!` 断言。
-
----
-
-## Step 10: 路由注册
-
-在 `src/routes.tsx` 的 `appRoutes` 数组中添加一条：
-
-```tsx
-import ArticleManagement from "@/pages/system/ArticleManagement"
-
 export const appRoutes: RouteConfig[] = [
-  // ... 已有路由
-  { path: "/system/article", title: "文章管理", icon: "FileText", element: <ArticleManagement /> },
+  { path: "/new-page", title: "新页面", icon: "Globe", element: <NewPage /> },
 ]
 ```
 
-完成后：
-- React Router 路由自动注册
-- 开发者模式侧边栏菜单自动出现
-- 如需普通用户可见，需在 `admin_menu` 表插入对应菜单记录并分配给角色
+### 菜单显示规则
 
----
+- 超级管理员 + 开发者模式开启：侧边栏显示 `appRoutes` 中全部路由
+- 超级管理员关闭开发者模式，或普通用户登录：侧边栏按后端返回的菜单树渲染
 
-## 权限注册（可选）
+## 推荐开发顺序
 
-后端编译并启动后，运行权限同步脚本：
+当你新增一个完整功能时，推荐按下面顺序推进：
 
-```bash
-cd admin-backend
-python script/sync_permissions_from_openapi.py
-```
-
-脚本自动读取 OpenAPI spec，将新增的 API 端点注册到 `admin_permission` 表。之后可在角色管理中分配给对应角色。
-
----
+1. Flyway 脚本变更数据库
+2. Entity / Mapper 建模
+3. DTO / VO 建模并补齐 `@Schema`
+4. Service 实现业务逻辑，CUD 补 `@OperationLog`
+5. Controller 暴露接口并补齐 `@Tag` / `@Operation`
+6. 执行 `mvn compile`
+7. 等待用户执行 `npm run generate:api`
+8. 前端页面接入 generated API
+9. 在 `src/routes.tsx` 注册页面
+10. 执行前端类型检查或构建验证
 
 ## 检查清单
 
-| 步骤 | 确认项 |
-|------|--------|
-| 建表 | Flyway 脚本版本号递增、包含基础字段 |
-| 实体 | 继承 BaseEntity、@TableName、@Schema |
-| Mapper | 继承 BaseMapper、@Mapper |
-| DTO/VO | 所有字段 @Schema、VO 内部类加前缀 |
-| Service | @RequiredArgsConstructor、CUD 加 @OperationLog |
-| Controller | @Tag、@Operation(operationId)、返回 R<T> |
-| 编译 | mvn compile 无错误 |
-| API 生成 | npm run generate:api 成功 |
-| 前端 | 使用 generated 函数、处理 optional 字段 |
-| 路由 | routes.tsx 注册、开发者模式可见 |
+### 后端检查
+
+- Flyway 脚本版本号递增
+- DTO / VO / Entity 字段已补 `@Schema`
+- Controller 已补 `@Tag` 和 `@Operation(operationId = ...)`
+- CUD Service 已补 `@OperationLog`
+- 删除逻辑使用 MyBatis-Plus `delete` 方法
+- `mvn compile` 通过
+
+### 前端检查
+
+- 只使用 `src/api/generated/` 中的函数和类型
+- 对 optional 字段做了空值处理
+- 页面已注册到 `src/routes.tsx`
+- 如函数名变更，已同步替换旧调用
+- `npx tsc --noEmit` 或构建检查通过
