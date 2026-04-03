@@ -1,18 +1,24 @@
 database:
-  host: "47******2"
-  port: 15432
-  username: "pos***s"
-  password: "A*****"
-  name: "scaffold_spring_dev"
+  host: "47xxxx92"
+  port: 1xxxx
+  username: "pxxxxes"
+  password: "Axxxx"
+  name: "scaxxxx"
 
 redis:
-  host: "47***2"
-  port: 163*79
-  password: "A*******"
+  host: "4xxx92"
+  port: 1xx9
+  password: "Axxxxxxxx"
   db: 0
   max_connections: 50
 
+minio:
+  endpoint: "https://oss.xxx.xyz"
+  access-key: "minxxin"
+  secret-key: "Axxxxx8."
+  bucket-name: "admxxxxads"
+
 jwt:
-  secret: "****************"
-  access-expiration: 1800000
+  secret: "xxxxxxxxxxxxxxxxxxxx"
+  access-expiration: 300000
   refresh-expiration: 604800000
